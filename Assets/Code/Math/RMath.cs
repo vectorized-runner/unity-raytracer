@@ -8,6 +8,23 @@ namespace RayTracer
 	{
 		private const float Epsilon = 0.00001f;
 
+		// TODO-Port: Code taken from the internet
+		public static bool RayAABBIntersection(Ray ray, AABB box)
+		{
+			var inverseDir = rcp(ray.Direction);
+			var tmin = 0.0f;
+			var tmax = INFINITY;
+			
+			for (var i = 0; i < 3; ++i) {
+				var t1 = (box.Min[i] - ray.Origin[i]) * inverseDir[i];
+				var t2 = (box.Max[i] - ray.Origin[i]) * inverseDir[i];
+				tmin = min(max(t1, tmin), max(t2, tmin));
+				tmax = max(min(t1, tmax), min(t2, tmax));
+			}
+
+			return tmin <= tmax;
+		}
+
 		// TODO-Port: Code taken from the internet, you know what to do.
 		public static bool RayTriangleIntersection(Ray ray, Triangle triangle, out float intersectionDistance)
 		{

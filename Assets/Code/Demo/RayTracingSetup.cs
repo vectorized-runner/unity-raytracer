@@ -302,13 +302,10 @@ namespace RayTracer
 				Type = ObjectType.None
 			};
 
-
 			for (int meshIndex = 0; meshIndex < Meshes.Count; meshIndex++)
 			{
 				var mesh = Meshes[meshIndex];
-				// TODO-Optimize: AABB check first, skip whole object if that doesn't hit
-				var aabbCheck = true;
-				if (aabbCheck)
+				if (RMath.RayAABBIntersection(ray, mesh.AABB))
 				{
 					// TODO: After doing pre-processing, we can add the triangles to the triangle list, just use index at mesh instead?
 					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
