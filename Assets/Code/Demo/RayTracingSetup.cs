@@ -390,38 +390,6 @@ namespace RayTracer
 			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
-		private float3 GetSurfaceNormal(float3 surfacePoint, ObjectId objectId)
-		{
-			switch (objectId.Type)
-			{
-				case ObjectType.Sphere:
-					return GetSphereNormal(surfacePoint, objectId.Index);
-				case ObjectType.Triangle:
-					return Scene.TriangleData.Normals[objectId.Index];
-				case ObjectType.MeshTriangle:
-					return Scene.MeshData.Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
-				case ObjectType.None:
-				default:
-					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
-			}
-		}
-
-		private float3 GetMirrorReflectance(ObjectId id)
-		{
-			switch (id.Type)
-			{
-				case ObjectType.Sphere:
-					return Scene.SphereData.Materials[id.Index].MirrorReflectance;
-				case ObjectType.Triangle:
-					return Scene.TriangleData.Materials[id.Index].MirrorReflectance;
-				case ObjectType.MeshTriangle:
-					return Scene.MeshData.Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
-				case ObjectType.None:
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
 		private float3 GetSphereNormal(float3 surfacePoint, int index)
 		{
 			var sphere = Scene.SphereData.Spheres[index];
