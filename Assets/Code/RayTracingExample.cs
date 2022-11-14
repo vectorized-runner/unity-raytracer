@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-
 [Serializable]
 public struct Ray
 {
@@ -107,6 +106,15 @@ public class RayTracingExample : MonoBehaviour
 	{
 		if (!Application.isPlaying)
 			return;
+
+		if (ToggleDrawIntersections)
+		{
+			foreach (var sphere in Spheres)
+			{
+				Gizmos.DrawWireSphere(sphere.Center, sphere.Radius);
+			}
+		}
+		
 		if (ToggleDrawImagePlane)
 		{
 			var rect = ImagePlane.GetRect(CameraData);
