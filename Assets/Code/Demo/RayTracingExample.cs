@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace RayTracer
 {
@@ -27,7 +26,7 @@ namespace RayTracer
 		// Lights
 		public List<PointLightData> PointLights;
 		public AmbientLightData AmbientLight;
-		
+
 		// Spheres
 		// Separate hot and cold data
 		public List<Sphere> Spheres;
@@ -37,7 +36,7 @@ namespace RayTracer
 		public List<Triangle> Triangles;
 		public List<MaterialData> TriangleMaterials;
 		public List<float3> TriangleNormals;
-		
+
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
 
@@ -205,31 +204,6 @@ namespace RayTracer
 			}
 		}
 
-		private Triangle CreateRandomTriangle(float3 center, float distanceMin, float distanceMax)
-		{
-			var r0 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
-			var r1 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
-			var r2 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
-			var p0 = center + new float3(r0.x, r0.y, 0f);
-			var p1 = center + new float3(r1.x, r1.y, 0f);
-			var p2 = center + new float3(r2.x, r2.y, 0f);
-
-			return new Triangle
-			{
-				Vertex0 = p0,
-				Vertex1 = p1,
-				Vertex2 = p2
-			};
-		}
-
-		private List<Triangle> CreateTriangles(float3 center)
-		{
-			return new List<Triangle>
-			{
-				CreateRandomTriangle(center, 15f, 30f)
-			};
-		}
-
 		private int GetPixelIndex(int2 pixelPosition, int resolutionX)
 		{
 			return pixelPosition.x + pixelPosition.y * resolutionX;
@@ -348,20 +322,26 @@ namespace RayTracer
 		// TODO-Implement: Handle non-diffuse types
 		// TODO-Implement: Cache anything that can be cached here.
 		// TODO-Optimize: There are math inefficiencies here.
-		private Color CalculatePixelColor(float3 cameraPosition, float3 pointOnSurface, ObjectType objectType, int objectIndex)
+		private Color CalculatePixelColor(float3 cameraPosition, float3 pointOnSurface, ObjectType objectType,
+			int objectIndex)
 		{
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
 			var result = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
-			
+
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
 				var lightDirection = math.normalize(lightPosition - pointOnSurface);
+				var shadowRay = new Ray(pointOnSurface, lightDirection);
+
+
 				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
 				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
+					lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
+					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				result += diffuseRgb + specularRgb;
 			}
 
@@ -369,7 +349,8 @@ namespace RayTracer
 		}
 
 		// TODO: Handle angle greater than 90, it's zero in that case.
-		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal, float3 specularReflectance, float receivedIrradiance, float phongExponent)
+		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal,
+			float3 specularReflectance, float receivedIrradiance, float phongExponent)
 		{
 			Debug.Assert(RMath.IsNormalized(lightDirection));
 			Debug.Assert(RMath.IsNormalized(cameraDirection));
@@ -390,17 +371,18 @@ namespace RayTracer
 			var v = lightDirection + cameraDirection;
 			var halfwayVector = v / math.length(v);
 			Debug.Assert(RMath.IsNormalized(halfwayVector));
-			
+
 			var cosNormalAndHalfway = math.max(0, math.dot(surfaceNormal, halfwayVector));
 			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
-		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 pointOnSurface, ObjectType objectType, int objectIndex)
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 pointOnSurface,
+			ObjectType objectType, int objectIndex)
 		{
 			switch (objectType)
 			{
 				case ObjectType.Sphere:
-				{						
+				{
 					var sphere = Spheres[objectIndex];
 					var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
 					var material = SphereMaterials[objectIndex];
@@ -423,14 +405,15 @@ namespace RayTracer
 			return new Rgb(ambientRadiance * ambientReflectance);
 		}
 
-		private Rgb CalculateDiffuse(float receivedIrradiance, float3 diffuseReflectance, float3 surfaceNormal, float3 lightDirection)
+		private Rgb CalculateDiffuse(float receivedIrradiance, float3 diffuseReflectance, float3 surfaceNormal,
+			float3 lightDirection)
 		{
 			Debug.Assert(receivedIrradiance >= 0f);
 			Debug.Assert(RMath.IsNormalized(surfaceNormal));
 			Debug.Assert(RMath.IsNormalized(lightDirection));
-			
+
 			var cosNormalAndLightDir = math.max(0, math.dot(lightDirection, surfaceNormal));
-			
+
 			return new Rgb
 			{
 				Value = diffuseReflectance * cosNormalAndLightDir * receivedIrradiance
