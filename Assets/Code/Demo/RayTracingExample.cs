@@ -26,7 +26,7 @@ namespace RayTracer
 
 		// Lights
 		public List<PointLightData> PointLights;
-		public List<AmbientLightData> AmbientLights;
+		public AmbientLightData AmbientLight;
 		
 		// Spheres
 		// Separate hot and cold data
@@ -109,11 +109,19 @@ namespace RayTracer
 
 		private void FetchAmbientLights()
 		{
-			AmbientLights.Clear();
-
-			foreach (var ambient in FindObjectsOfType<SceneAmbientLight>())
+			AmbientLight = default;
+			var ambientLights = FindObjectsOfType<SceneAmbientLight>();
+			
+			switch (ambientLights.Length)
 			{
-				AmbientLights.Add(ambient.AmbientLight);
+				case > 1:
+					Debug.LogError("There are more than Single Ambient Lights in the Scene.");
+					return;
+				case 0:
+					return;
+				default:
+					AmbientLight = ambientLights[0].AmbientLight;
+					break;
 			}
 		}
 
@@ -329,9 +337,9 @@ namespace RayTracer
 		// TODO-Optimize: There are math inefficiencies here.
 		private Color CalculatePixelColor(float3 cameraPosition, float3 pointOnSurface, ObjectType objectType, int objectIndex)
 		{
-			var result = new Rgb(float3.zero);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
-
+			var result = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
+			
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
@@ -342,12 +350,6 @@ namespace RayTracer
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
 				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				result += diffuseRgb + specularRgb;
-			}
-
-			foreach (var ambientLight in AmbientLights)
-			{
-				var rgb = CalculateAmbient(material.AmbientReflectance, ambientLight.Radiance);
-				result += rgb;
 			}
 
 			return result.Color;
