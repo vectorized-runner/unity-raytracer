@@ -14,6 +14,7 @@ namespace RayTracer
 		{
 			get
 			{
+				// TODO: This normal works as -v / mathlength(v) in cpp side, understand this?
 				var v = math.cross(Vertex2 - Vertex0, Vertex1 - Vertex0);
 				return v / math.length(v);
 			}
