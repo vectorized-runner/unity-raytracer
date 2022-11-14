@@ -6,7 +6,8 @@ namespace RayTracer
 	{
 		public ObjectType Type;
 		public int Index;
-
+		public int MeshIndex;
+		
 		public static bool operator ==(ObjectId left, ObjectId right)
 		{
 			return left.Equals(right);

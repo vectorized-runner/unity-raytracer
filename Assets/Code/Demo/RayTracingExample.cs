@@ -297,9 +297,38 @@ namespace RayTracer
 		public IntersectionResult RaySceneIntersection(Ray ray)
 		{
 			var smallestIntersectionDistance = float.MaxValue;
-			var hitObject = ObjectType.None;
-			var hitObjectIndex = -1;
-
+			var hitObject = new ObjectId
+			{
+				Index = -1,
+				MeshIndex = -1,
+				Type = ObjectType.None
+			};
+			
+			for (int meshIndex = 0; meshIndex < Meshes.Count; meshIndex++)
+			{
+				var mesh = Meshes[meshIndex];
+				// TODO: AABB check first, skip whole object if that doesn't hit
+				var aabbCheck = true;
+				if (aabbCheck)
+				{
+					// TODO: After doing pre-processing, we can add the triangles to the triangle list, just use index at mesh instead?
+					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
+					{
+						var triangle = mesh.Triangles[triIndex];
+						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+						{
+							if (smallestIntersectionDistance > intersectionDistance)
+							{
+								smallestIntersectionDistance = intersectionDistance;
+								hitObject.Type = ObjectType.MeshTriangle;
+								hitObject.Index = triIndex;
+								hitObject.MeshIndex = meshIndex;
+							}
+						}
+					}
+				}
+			}
+			
 			for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
 			{
 				var sphere = Spheres[sphereIndex];
@@ -308,8 +337,8 @@ namespace RayTracer
 					if (smallestIntersectionDistance > closestIntersectionDistance)
 					{
 						smallestIntersectionDistance = closestIntersectionDistance;
-						hitObject = ObjectType.Sphere;
-						hitObjectIndex = sphereIndex;
+						hitObject.Type = ObjectType.Sphere;
+						hitObject.Index = sphereIndex;
 					}
 				}
 			}
@@ -322,8 +351,8 @@ namespace RayTracer
 					if (smallestIntersectionDistance > intersectionDistance)
 					{
 						smallestIntersectionDistance = intersectionDistance;
-						hitObject = ObjectType.Triangle;
-						hitObjectIndex = triIndex;
+						hitObject.Type = ObjectType.Triangle;
+						hitObject.Index = triIndex;
 					}
 				}
 			}
@@ -331,11 +360,7 @@ namespace RayTracer
 			return new IntersectionResult
 			{
 				Distance = smallestIntersectionDistance,
-				ObjectId = new ObjectId
-				{
-					Index = hitObjectIndex,
-					Type = hitObject,
-				}
+				ObjectId = hitObject,
 			};
 		}
 
