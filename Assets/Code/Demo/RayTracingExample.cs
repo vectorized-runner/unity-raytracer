@@ -358,6 +358,18 @@ namespace RayTracer
 		{
 			Debug.Assert(RMath.IsNormalized(lightDirection));
 			Debug.Assert(RMath.IsNormalized(cameraDirection));
+			Debug.Assert(RMath.IsNormalized(surfaceNormal));
+
+			var lightDotNormal = math.dot(lightDirection, surfaceNormal);
+			var angle = math.degrees(math.acos(lightDotNormal));
+			// If this assertion fails, take the absolute of angle
+			Debug.Assert(angle > 0f);
+
+			// Light is coming from behind the surface 
+			if (angle > 90f)
+			{
+				return new Rgb(float3.zero);
+			}
 
 			var v = lightDirection + cameraDirection;
 			var halfwayVector = v / math.length(v);
