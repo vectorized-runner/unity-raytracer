@@ -179,7 +179,10 @@ namespace RayTracer
 				// Check intersection against each sphere
 				foreach (var sphere in Spheres)
 				{
-					switch (RMath.RaySphereIntersectionAnalytical(ray, sphere, out var intersectA, out var intersectB))
+					var roots = RMath.RaySphereIntersectionAnalytical(ray, sphere, out var intersectA, out var intersectB);
+					Debug.Log($"Ray: {ray}, Sphere: {sphere}, Roots: {roots}, p0: {intersectA}, p1: {intersectB}");
+					
+					switch (roots)
 					{
 						case 0:
 						{
