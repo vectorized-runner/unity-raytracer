@@ -308,7 +308,7 @@ namespace RayTracer
 					if (hitObject != ObjectType.None)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
-						PixelColors[index] = CalculatePixelColor(intersectionPoint, hitObject, hitObjectIndex);
+						PixelColors[index] = CalculatePixelColor(cameraPosition, intersectionPoint, hitObject, hitObjectIndex);
 
 						if (ToggleDrawIntersections)
 						{
@@ -327,7 +327,7 @@ namespace RayTracer
 		// TODO-Implement: Handle non-diffuse types
 		// TODO-Implement: Cache anything that can be cached here.
 		// TODO-Optimize: There are math inefficiencies here.
-		private Color CalculatePixelColor(float3 pointOnSurface, ObjectType objectType, int objectIndex)
+		private Color CalculatePixelColor(float3 cameraPosition, float3 pointOnSurface, ObjectType objectType, int objectIndex)
 		{
 			var result = new Rgb(float3.zero);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
@@ -336,10 +336,12 @@ namespace RayTracer
 			{
 				var lightPosition = pointLight.Position;
 				var lightDirection = math.normalize(lightPosition - pointOnSurface);
+				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
 				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				result += diffuseRgb;
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				result += diffuseRgb + specularRgb;
 			}
 
 			foreach (var ambientLight in AmbientLights)
@@ -349,6 +351,20 @@ namespace RayTracer
 			}
 
 			return result.Color;
+		}
+
+		// TODO: Handle angle greater than 90, it's zero in that case.
+		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal, float3 specularReflectance, float receivedIrradiance, float phongExponent)
+		{
+			Debug.Assert(RMath.IsNormalized(lightDirection));
+			Debug.Assert(RMath.IsNormalized(cameraDirection));
+
+			var v = lightDirection + cameraDirection;
+			var halfwayVector = v / math.length(v);
+			Debug.Assert(RMath.IsNormalized(halfwayVector));
+			
+			var cosNormalAndHalfway = math.max(0, math.dot(surfaceNormal, halfwayVector));
+			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
 		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 pointOnSurface, ObjectType objectType, int objectIndex)

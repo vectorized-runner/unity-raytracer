@@ -8,5 +8,8 @@ namespace RayTracer
 	{
 		public float3 DiffuseReflectance;
 		public float3 AmbientReflectance;
+		public float3 MirrorReflectance;
+		public float3 SpecularReflectance;
+		public float PhongExponent;
 	}
 }
