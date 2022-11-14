@@ -90,7 +90,7 @@ namespace RayTracer
 
 		private void FetchSceneComponents()
 		{
-			UpdateTriangles();
+			FetchTriangles();
 			FetchSpheres();
 			FetchPointLights();
 		}
@@ -106,18 +106,17 @@ namespace RayTracer
 			}
 		}
 
-		private void UpdateTriangles()
+		private void FetchTriangles()
 		{
-			if (Input.GetKeyDown(KeyCode.Space))
+			Triangles.Clear();
+			TriangleNormals.Clear();
+			TriangleMaterials.Clear();
+
+			foreach (var triangle in FindObjectsOfType<SceneTriangle>())
 			{
-				Triangles.Clear();
-				TriangleNormals.Clear();
-
-				var center = CameraData.Position + new float3(0f, 0f, 15f);
-				Triangles = CreateTriangles(center);
-				TriangleNormals.AddRange(Triangles.Select(tri => tri.Normal));
-
-				Debug.Log("Created Triangles!");
+				Triangles.Add(triangle.Triangle);
+				TriangleNormals.Add(triangle.Triangle.Normal);
+				TriangleMaterials.Add(triangle.Material);
 			}
 		}
 		
