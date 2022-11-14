@@ -386,11 +386,11 @@ namespace RayTracer
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb ShadePixel(Ray ray, float3 cameraPosition, IntersectionResult result)
+		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition, IntersectionResult result)
 		{
-			var surfacePoint = ray.GetPoint(result.Distance);
-			var objectId = result.ObjectId;
-			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, objectId);
+			var surfacePoint = pixelRay.GetPoint(result.Distance);
+			var pixelRayHitObject = result.ObjectId;
+			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
 			foreach (var pointLight in PointLights)
@@ -399,12 +399,12 @@ namespace RayTracer
 				var lightDirection = math.normalize(lightPosition - surfacePoint);
 				var shadowRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
-				var intersectResult = RaySceneIntersection(shadowRay);
+				var shadowRayHitResult = RaySceneIntersection(shadowRay);
 				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
 
-				if (objectId.Type != ObjectType.None)
+				if (pixelRayHitObject.Type != ObjectType.None)
 				{
-					var hitDistanceSq = intersectResult.Distance * intersectResult.Distance;
+					var hitDistanceSq = shadowRayHitResult.Distance * shadowRayHitResult.Distance;
 					if (hitDistanceSq < lightDistanceSq)
 					{
 						// Shadow ray intersects with an object before light, no contribution from this light
@@ -413,7 +413,7 @@ namespace RayTracer
 				}
 
 				// Shadow ray hit this object again, shouldn't happen
-				Debug.Assert(intersectResult.ObjectId != objectId);
+				Debug.Assert(shadowRayHitResult.ObjectId != pixelRayHitObject);
 
 				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
