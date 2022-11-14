@@ -388,10 +388,15 @@ namespace RayTracer
 			// var thisColor = CalculatePixelColor(cameraPosition, surfacePoint, objectType, objectIndex);
 
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectType, objectIndex);
+			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
+			return thisColor + PathTrace(newRay, cameraPosition, cameraDirection, currentBounces + 1);
+		}
+
+		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection)
+		{
 			var newRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
 			var newRayNormal = 2 * surfaceNormal * math.dot(cameraDirection, surfaceNormal) - cameraDirection;
-			var newRay = new Ray(newRayOrigin, newRayNormal);
-			return thisColor + PathTrace(newRay, cameraPosition, cameraDirection, currentBounces + 1);
+			return new Ray(newRayOrigin, newRayNormal);
 		}
 
 		// TODO: Handle angle greater than 90, it's zero in that case.
