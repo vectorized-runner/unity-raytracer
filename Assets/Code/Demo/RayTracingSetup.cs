@@ -366,7 +366,7 @@ namespace RayTracer
 		}
 
 		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal,
-			float3 specularReflectance, float receivedIrradiance, float phongExponent)
+			float3 specularReflectance, float3 receivedIrradiance, float phongExponent)
 		{
 			Debug.Assert(IsNormalized(lightDirection));
 			Debug.Assert(IsNormalized(cameraDirection));
