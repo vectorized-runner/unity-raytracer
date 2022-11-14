@@ -205,6 +205,7 @@ namespace RayTracer
 		// 1. Convert 2d to 1d loop
 		// 2. Invert Loop and Run vs. Spheres first, then Run vs. other shapes
 		// Another idea: Run Sphere vs. Pixels first, Then Run Triangle vs. Pixels etc... (homogenous)
+		// TODO-Optimize: We can collect all intersection distances, and find the smallest of them in a separate loop?
 		private void DrawIntersections(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
@@ -231,16 +232,18 @@ namespace RayTracer
 
 				// Check intersection against each object
 				{
-					var smallestIntersectionDistance = float.MinValue;
+					var smallestIntersectionDistance = float.MaxValue;
+					var foundIntersection = false;
 					
 					foreach (var sphere in Spheres)
 					{
 						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
 						{
-							// if (closestIntersectionDistance > smallestIntersectionDistance)
-							// {
-							// 	
-							// }
+							if (smallestIntersectionDistance > closestIntersectionDistance)
+							{
+								smallestIntersectionDistance = closestIntersectionDistance;
+								foundIntersection = true;
+							}
 						}
 					}
 					foreach (var triangle in Triangles)
@@ -250,10 +253,11 @@ namespace RayTracer
 							if (smallestIntersectionDistance > intersectionDistance)
 							{
 								smallestIntersectionDistance = intersectionDistance;
+								foundIntersection = true;
 							}
 						}
 					}
-					if (smallestIntersectionDistance > 0f)
+					if (foundIntersection)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
 						Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);

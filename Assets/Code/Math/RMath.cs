@@ -61,7 +61,7 @@ namespace RayTracer
 		// TODO-Optimize: Store RadiusSquared on Spheres?
 		// TODO-Optimize: Only need to return for 1 root, not 2 roots, not used.
 		// TODO-Optimize: On 2 root case, if t0 is greater than zero, we don't have to check t1.
-		public static bool RaySphereIntersection(Ray ray, Sphere sphere, out float3 closestIntersection)
+		public static bool RaySphereIntersection(Ray ray, Sphere sphere, out float closestIntersectionDistance)
 		{
 			Debug.Assert(IsLengthEqual(ray.Direction, 1f));
 
@@ -71,7 +71,7 @@ namespace RayTracer
 
 			if (discriminant < 0)
 			{
-				closestIntersection = default;
+				closestIntersectionDistance = 0f;
 				return false;
 			}
 
@@ -81,13 +81,12 @@ namespace RayTracer
 
 			if (bigRoot < 0)
 			{
-				closestIntersection = default;
+				closestIntersectionDistance = 0f;
 				return false;
 			}
 
 			var smallRoot = -uoc - sqrtDiscriminant;
-			var result = smallRoot < 0 ? bigRoot : smallRoot;
-			closestIntersection = ray.GetPoint(result);
+			closestIntersectionDistance = smallRoot < 0 ? bigRoot : smallRoot;
 			return true;
 		}
 
