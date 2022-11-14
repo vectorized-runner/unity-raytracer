@@ -13,5 +13,12 @@ namespace RayTracer
 		{
 			return $"Center: {Center}, RadiusSq: {RadiusSquared}";
 		}
+
+		public AABB AABB =>
+			new()
+			{
+				Min = Center - math.sqrt(RadiusSquared),
+				Max = Center + math.sqrt(RadiusSquared),
+			};
 	}
 }

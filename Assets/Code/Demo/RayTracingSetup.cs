@@ -13,6 +13,34 @@ namespace RayTracer
 		
 		public List<PointLightData> PointLights;
 		public AmbientLightData AmbientLight;
+
+		public AABB AABB;
+
+		public void CalculateAABB()
+		{
+			var aabb = new AABB();
+			aabb.Min = float.MaxValue;
+			aabb.Max = float.MinValue;
+
+			foreach (var mesh in MeshData.Meshes)
+			{
+				aabb.Encapsulate(mesh.AABB);
+			}
+
+			foreach (var triangle in TriangleData.Triangles)
+			{
+				aabb.Encapsulate(triangle.Vertex0);
+				aabb.Encapsulate(triangle.Vertex1);
+				aabb.Encapsulate(triangle.Vertex2);
+			}
+
+			foreach (var sphere in SphereData.Spheres)
+			{
+				aabb.Encapsulate(sphere.AABB);
+			}
+
+			AABB = aabb;
+		}
 	}
 
 	[Serializable]
@@ -157,13 +185,14 @@ namespace RayTracer
 			return new int2(pixelIndex % resolutionX, pixelIndex / resolutionX);
 		}
 
-		private void FetchSceneComponents()
+		private void UpdateScene()
 		{
 			FetchTriangles();
 			FetchSpheres();
 			FetchMeshes();
 			FetchPointLights();
 			FetchAmbientLights();
+			Scene.CalculateAABB();
 		}
 
 		private void FetchAmbientLights()
@@ -220,7 +249,7 @@ namespace RayTracer
 			};
 
 			ClearScreen();
-			FetchSceneComponents();
+			UpdateScene();
 			DrawTriangles();
 			DrawMeshTriangles();
 

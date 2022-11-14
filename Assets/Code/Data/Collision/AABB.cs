@@ -12,5 +12,11 @@ namespace RayTracer
 			Min = math.min(point, Min);
 			Max = math.max(point, Max);
 		}
+
+		public void Encapsulate(AABB other)
+		{
+			Min = math.min(Min, other.Min);
+			Max = math.max(Max, other.Max);
+		}
 	}
 }
