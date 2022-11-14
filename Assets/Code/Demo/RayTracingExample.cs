@@ -49,6 +49,14 @@ namespace RayTracer
 			if (!Application.isPlaying)
 				return;
 
+			var color = Gizmos.color;
+			Gizmos.color = Color.yellow;
+			foreach (var pointLight in PointLights)
+			{
+				Gizmos.DrawWireSphere(pointLight.Position, 1f);
+			}
+			Gizmos.color = color;
+
 			foreach (var sphere in Spheres)
 			{
 				Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
