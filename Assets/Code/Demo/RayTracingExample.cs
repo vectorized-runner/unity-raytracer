@@ -330,21 +330,27 @@ namespace RayTracer
 		private Color CalculatePixelColor(float3 pointOnSurface, ObjectType objectType, int objectIndex)
 		{
 			var result = new Rgb(float3.zero);
+			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
 
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
 				var directionToLight = math.normalize(lightPosition - pointOnSurface);
 				var distanceSq = math.distancesq(pointOnSurface, lightPosition);
-				var (surfaceNormal, diffuseReflectance) = GetSurfaceNormalAndDiffuseReflectance(pointOnSurface, objectType, objectIndex);
-				var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, diffuseReflectance, surfaceNormal, directionToLight);
+				var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, material.DiffuseReflectance, surfaceNormal, directionToLight);
+				result += rgb;
+			}
+
+			foreach (var ambientLight in AmbientLights)
+			{
+				var rgb = CalculateAmbient(material.AmbientReflectance, ambientLight.Radiance);
 				result += rgb;
 			}
 
 			return result.Color;
 		}
 
-		private (float3 surfaceNormal, float3 diffuseReflectance) GetSurfaceNormalAndDiffuseReflectance(float3 pointOnSurface, ObjectType objectType, int objectIndex)
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 pointOnSurface, ObjectType objectType, int objectIndex)
 		{
 			switch (objectType)
 			{
@@ -352,19 +358,24 @@ namespace RayTracer
 				{						
 					var sphere = Spheres[objectIndex];
 					var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
-					var diffuseReflectance = SphereMaterials[objectIndex].DiffuseReflectance;
-					return (surfaceNormal, diffuseReflectance);
+					var material = SphereMaterials[objectIndex];
+					return (surfaceNormal, material);
 				}
 				case ObjectType.Triangle:
 				{
 					var surfaceNormal = TriangleNormals[objectIndex];
-					var diffuseReflectance = TriangleMaterials[objectIndex].DiffuseReflectance;
-					return (surfaceNormal, diffuseReflectance);
+					var material = TriangleMaterials[objectIndex];
+					return (surfaceNormal, material);
 				}
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
 			}
+		}
+
+		private Rgb CalculateAmbient(float3 ambientReflectance, float3 ambientRadiance)
+		{
+			return new Rgb(ambientRadiance * ambientReflectance);
 		}
 
 		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)

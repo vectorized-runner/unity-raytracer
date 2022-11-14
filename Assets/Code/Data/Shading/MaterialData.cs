@@ -7,5 +7,6 @@ namespace RayTracer
 	public struct MaterialData
 	{
 		public float3 DiffuseReflectance;
+		public float3 AmbientReflectance;
 	}
 }
