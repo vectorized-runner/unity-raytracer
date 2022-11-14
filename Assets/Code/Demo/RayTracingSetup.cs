@@ -7,7 +7,7 @@ namespace RayTracer
 {
 	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
 	// TODO-Optimization: Consider not storing Triangle normals
-	public class RayTracingExample : MonoBehaviour
+	public class RayTracingSetup : MonoBehaviour
 	{
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
@@ -438,8 +438,7 @@ namespace RayTracer
 		}
 
 		// TODO-Implementation: Ensure that we will run full color equation on these objects
-		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance,
-			int currentBounces)
+		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance, int currentBounces)
 		{
 			if (currentBounces >= ReflectionBounces)
 				return new Rgb(0);
@@ -454,8 +453,7 @@ namespace RayTracer
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 			var hitMirrorReflectance = GetMirrorReflectance(objectId);
-			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance,
-				currentBounces + 1);
+			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance, currentBounces + 1);
 
 			return new Rgb((thisColor + recursiveTrace).Value * mirrorReflectance);
 		}
