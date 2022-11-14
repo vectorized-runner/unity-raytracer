@@ -34,6 +34,7 @@ namespace RayTracer
 		public List<PointLightData> PointLights;
 
 		public List<Triangle> Triangles;
+		public List<MaterialData> TriangleMaterials;
 		public List<float3> TriangleNormals;
 
 		private Color[] PixelColors = Array.Empty<Color>();
@@ -311,33 +312,38 @@ namespace RayTracer
 
 			foreach (var pointLight in PointLights)
 			{
-				switch (objectType)
-				{
-					case ObjectType.Sphere:
-					{
-						var sphere = Spheres[objectIndex];
-						var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
-						var diffuseReflectance = SphereMaterials[objectIndex].DiffuseReflectance;
-						var lightPosition = pointLight.Position;
-						var distanceSq = math.distancesq(pointOnSurface, lightPosition);
-						var directionToLight = math.normalize(lightPosition - pointOnSurface);
-						var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, diffuseReflectance, surfaceNormal, directionToLight);
-						result += rgb;
-						// Debug.Log($"Rgb is: {rgb}");
-						break;
-					}
-					case ObjectType.Triangle:
-					{
-						// TODO-Implement:
-						break;
-					}
-					case ObjectType.None:
-					default:
-						throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
-				}
+				var lightPosition = pointLight.Position;
+				var directionToLight = math.normalize(lightPosition - pointOnSurface);
+				var distanceSq = math.distancesq(pointOnSurface, lightPosition);
+				var (surfaceNormal, diffuseReflectance) = GetSurfaceNormalAndDiffuseReflectance(pointOnSurface, objectType, objectIndex);
+				var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, diffuseReflectance, surfaceNormal, directionToLight);
+				result += rgb;
 			}
 
 			return result.Color;
+		}
+
+		private (float3 surfaceNormal, float3 diffuseReflectance) GetSurfaceNormalAndDiffuseReflectance(float3 pointOnSurface, ObjectType objectType, int objectIndex)
+		{
+			switch (objectType)
+			{
+				case ObjectType.Sphere:
+				{						
+					var sphere = Spheres[objectIndex];
+					var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
+					var diffuseReflectance = SphereMaterials[objectIndex].DiffuseReflectance;
+					return (surfaceNormal, diffuseReflectance);
+				}
+				case ObjectType.Triangle:
+				{
+					var surfaceNormal = TriangleNormals[objectIndex];
+					var diffuseReflectance = TriangleMaterials[objectIndex].DiffuseReflectance;
+					return (surfaceNormal, diffuseReflectance);
+				}
+				case ObjectType.None:
+				default:
+					throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
+			}
 		}
 
 		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)
