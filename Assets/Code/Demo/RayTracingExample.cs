@@ -12,7 +12,7 @@ namespace RayTracer
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
 		public int ReflectionBounces = 0;
-		
+
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawPixelRays = true;
 		public bool ToggleDrawIntersections = true;
@@ -39,13 +39,13 @@ namespace RayTracer
 		public List<Triangle> Triangles;
 		public List<MaterialData> TriangleMaterials;
 		public List<float3> TriangleNormals;
-		
+
 		// Meshes
 		public List<Mesh> Meshes;
 
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
-		
+
 		const float ShadowRayEpsilon = 0.0001f;
 
 		private void Start()
@@ -173,6 +173,7 @@ namespace RayTracer
 			ClearScreen();
 			FetchSceneComponents();
 			DrawTriangles();
+			DrawMeshTriangles();
 
 			if (ToggleDrawImagePlane)
 			{
@@ -185,6 +186,17 @@ namespace RayTracer
 			}
 
 			HandleIntersections(CameraData);
+		}
+
+		private void DrawMeshTriangles()
+		{
+			foreach (var mesh in Meshes)
+			{
+				foreach (var triangle in mesh.Triangles)
+				{
+					DrawTriangle(triangle);
+				}
+			}
 		}
 
 		private void ClearScreen()
@@ -202,14 +214,19 @@ namespace RayTracer
 		{
 			foreach (var triangle in Triangles)
 			{
-				Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, TriangleColor);
-				Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, TriangleColor);
-				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, TriangleColor);
+				DrawTriangle(triangle);
+			}
+		}
 
-				if (ToggleDrawSurfaceNormals)
-				{
-					Debug.DrawRay(triangle.Center, triangle.Normal * 5f, SurfaceNormalColor);
-				}
+		private void DrawTriangle(Triangle triangle)
+		{
+			Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, TriangleColor);
+			Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, TriangleColor);
+			Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, TriangleColor);
+
+			if (ToggleDrawSurfaceNormals)
+			{
+				Debug.DrawRay(triangle.Center, triangle.Normal * 5f, SurfaceNormalColor);
 			}
 		}
 
@@ -275,7 +292,7 @@ namespace RayTracer
 				{
 					var index = GetPixelIndex(new int2(x, y), resX);
 					var intersectionResult = RaySceneIntersection(ray);
-					
+
 					if (intersectionResult.ObjectId.Type != ObjectType.None)
 					{
 						PixelColors[index] = CalculatePixelColor(ray, cameraPosition, intersectionResult).Color;
@@ -303,11 +320,12 @@ namespace RayTracer
 				MeshIndex = -1,
 				Type = ObjectType.None
 			};
-			
+
+
 			for (int meshIndex = 0; meshIndex < Meshes.Count; meshIndex++)
 			{
 				var mesh = Meshes[meshIndex];
-				// TODO: AABB check first, skip whole object if that doesn't hit
+				// TODO-Optimize: AABB check first, skip whole object if that doesn't hit
 				var aabbCheck = true;
 				if (aabbCheck)
 				{
@@ -315,6 +333,7 @@ namespace RayTracer
 					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
 					{
 						var triangle = mesh.Triangles[triIndex];
+
 						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 						{
 							if (smallestIntersectionDistance > intersectionDistance)
@@ -328,7 +347,7 @@ namespace RayTracer
 					}
 				}
 			}
-			
+
 			for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
 			{
 				var sphere = Spheres[sphereIndex];
@@ -391,14 +410,16 @@ namespace RayTracer
 						continue;
 					}
 				}
-				
+
 				// Shadow ray hit this object again, shouldn't happen
 				Debug.Assert(intersectResult.ObjectId != objectId);
-				
+
 				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
+					lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
+					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 
 				if (material.IsMirror)
 				{
@@ -407,8 +428,8 @@ namespace RayTracer
 					var mirrorReflectance = material.MirrorReflectance;
 					finalRgb += PathTrace(reflectRay, cameraPosition, cameraDirection, mirrorReflectance, 1);
 				}
-				
-				
+
+
 				finalRgb += diffuseRgb + specularRgb;
 			}
 
@@ -416,7 +437,8 @@ namespace RayTracer
 		}
 
 		// TODO-Implementation: Ensure that we will run full color equation on these objects
-		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance, int currentBounces)
+		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance,
+			int currentBounces)
 		{
 			if (currentBounces >= ReflectionBounces)
 				return new Rgb(0);
@@ -425,13 +447,14 @@ namespace RayTracer
 			var objectId = result.ObjectId;
 			if (objectId.Type == ObjectType.None)
 				return new Rgb(0);
-			
+
 			var surfacePoint = ray.GetPoint(result.Distance);
 			var thisColor = CalculatePixelColor(ray, cameraPosition, result);
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 			var hitMirrorReflectance = GetMirrorReflectance(objectId);
-			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance, currentBounces + 1);
+			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance,
+				currentBounces + 1);
 
 			return new Rgb((thisColor + recursiveTrace).Value * mirrorReflectance);
 		}
@@ -509,7 +532,8 @@ namespace RayTracer
 			return surfaceNormal;
 		}
 
-		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectId id)
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint,
+			ObjectId id)
 		{
 			switch (id.Type)
 			{
