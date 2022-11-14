@@ -74,11 +74,6 @@ public class RayTracingExample : MonoBehaviour
 
 	private CameraData CameraData;
 
-	private void OnCanvasGroupChanged()
-	{
-		throw new NotImplementedException();
-	}
-
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
@@ -91,10 +86,10 @@ public class RayTracingExample : MonoBehaviour
 		Gizmos.DrawSphere(rect.BottomLeft, 1f);
 		Gizmos.DrawSphere(rect.BottomRight, 1f);
 		
-		Gizmos.DrawLine(rect.TopLeft, rect.TopRight);
-		Gizmos.DrawLine(rect.TopLeft, rect.BottomLeft);
-		Gizmos.DrawLine(rect.TopRight, rect.BottomRight);
-		Gizmos.DrawLine(rect.BottomLeft, rect.BottomRight);
+		// Gizmos.DrawLine(rect.TopLeft, rect.TopRight);
+		// Gizmos.DrawLine(rect.TopLeft, rect.BottomLeft);
+		// Gizmos.DrawLine(rect.TopRight, rect.BottomRight);
+		// Gizmos.DrawLine(rect.BottomLeft, rect.BottomRight);
 	}
 
 	void Update()
@@ -129,7 +124,7 @@ public class RayTracingExample : MonoBehaviour
 			var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
 			var lineStart = start + new float3(0, -moveDownLength, 0);
 			var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
-			Debug.DrawLine(lineStart, lineEnd, Color.blue);
+			Debug.DrawLine(lineStart, lineEnd, Color.yellow);
 		}
 
 		var resolutionY = ImagePlane.Resolution.Y;
@@ -137,8 +132,8 @@ public class RayTracingExample : MonoBehaviour
 		// Vertical Lines
 		for (var y = 0; y <= resolutionY; y++)
 		{
-			var moveLeftLength = ImagePlane.HorizontalLength * y / resolutionX;
-			var lineStart = start + new float3(-moveLeftLength, 0, 0);
+			var moveRightLength = ImagePlane.HorizontalLength * y / resolutionX;
+			var lineStart = start + new float3(moveRightLength, 0, 0);
 			var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
 			Debug.DrawLine(lineStart, lineEnd, Color.yellow);
 		}
