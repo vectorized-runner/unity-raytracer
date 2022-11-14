@@ -249,7 +249,7 @@ namespace RayTracer
 				var rightMove = (x + 0.5f) * horizontalLength / resX;
 				var downMove = (y + 0.5f) * verticalLength / resY;
 				var pixelPosition = topLeft + rightMove * right - up * downMove;
-				var pixelRay = new Ray
+				var ray = new Ray
 				{
 					Origin = cameraPosition,
 					Direction = math.normalize(pixelPosition - cameraPosition)
@@ -258,16 +258,16 @@ namespace RayTracer
 				// Check intersection against each object
 				{
 					var index = GetPixelIndex(new int2(x, y), resX);
-					var intersectionResult = RaySceneIntersection(pixelRay);
+					var intersectionResult = RaySceneIntersection(ray);
 					
 					if (intersectionResult.ObjectType != ObjectType.None)
 					{
-						var intersectionPoint = pixelRay.GetPoint(intersectionResult.Distance);
-						PixelColors[index] = CalculatePixelColor(cameraPosition, intersectionPoint, intersectionResult.ObjectType, intersectionResult.ObjectIndex);
+						PixelColors[index] = CalculatePixelColor(ray, cameraPosition, intersectionResult).Color;
 
 						if (ToggleDrawIntersections)
 						{
-							Debug.DrawLine(pixelRay.Origin, intersectionPoint, IntersectionColor);
+							var intersectionPoint = ray.GetPoint(intersectionResult.Distance);
+							Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
 						}
 					}
 					else
@@ -322,9 +322,11 @@ namespace RayTracer
 
 		// TODO-Optimize: Cache anything that can be cached here.
 		// TODO-Optimize: There are math inefficiencies here.
-		private Color CalculatePixelColor(float3 cameraPosition, float3 surfacePoint, ObjectType objectType,
-			int objectIndex)
+		private Rgb CalculatePixelColor(Ray ray, float3 cameraPosition, IntersectionResult result)
 		{
+			var surfacePoint = ray.GetPoint(result.Distance);
+			var objectType = result.ObjectType;
+			var objectIndex = result.ObjectIndex;
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, objectType, objectIndex);
 			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
@@ -357,39 +359,39 @@ namespace RayTracer
 
 				if (material.IsMirror)
 				{
-					finalRgb += CalculateSpecularReflection();
+					// TODO-Implement: We need to Bounce the first one manually, since we will not calculate its full color again
+					finalRgb += PathTrace(ray, cameraPosition, cameraDirection, 0);
 				}
 				
 				
 				finalRgb += diffuseRgb + specularRgb;
 			}
 
-			return finalRgb.Color;
+			return finalRgb;
 		}
 
-		private Rgb CalculateSpecularReflection(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection, float3 lightDirection)
-		{
-			return PathTrace(, 1);
-		}
-
-		private Rgb PathTrace(Ray ray, int currentBounces)
+		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, int currentBounces)
 		{
 			if (currentBounces >= ReflectionBounces)
 				return new Rgb(0);
 
 			var result = RaySceneIntersection(ray);
-			if (result.ObjectType == ObjectType.None)
+			var objectType = result.ObjectType;
+			if (objectType == ObjectType.None)
 				return new Rgb(0);
 			
 			// TODO-Implement: Run Color equation for this object
-			var thisColor = new Rgb(0);
-
 			var surfacePoint = ray.GetPoint(result.Distance);
-			var surfaceNormal = GetSurfaceNormal(surfacePoint, result.ObjectType, result.ObjectIndex);
+			var objectIndex = result.ObjectIndex;
+
+			var thisColor = new Rgb(0);
+			// var thisColor = CalculatePixelColor(cameraPosition, surfacePoint, objectType, objectIndex);
+
+			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectType, objectIndex);
 			var newRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
-			var newRayNormal = ;
+			var newRayNormal = 2 * surfaceNormal * math.dot(cameraDirection, surfaceNormal) - cameraDirection;
 			var newRay = new Ray(newRayOrigin, newRayNormal);
-			return thisColor + PathTrace(newRay, currentBounces + 1);
+			return thisColor + PathTrace(newRay, cameraPosition, cameraDirection, currentBounces + 1);
 		}
 
 		// TODO: Handle angle greater than 90, it's zero in that case.
