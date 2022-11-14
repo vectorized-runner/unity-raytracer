@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace RayTracer
 {
@@ -73,6 +74,7 @@ namespace RayTracer
 		public Color IntersectionColor = Color.cyan;
 
 		public List<Sphere> Spheres;
+		public List<Triangle> Triangles;
 
 		private void Start()
 		{
@@ -114,6 +116,13 @@ namespace RayTracer
 				Up = math.normalize(cam.transform.up)
 			};
 
+			if (Input.GetKeyDown(KeyCode.Space))
+			{
+				Triangles.Clear();
+				var center = CameraData.Position + new float3(0f, 0f, 15f);
+				Triangles = CreateTriangles(center);
+			}
+
 			if (ToggleDrawImagePlane)
 			{
 				DrawImagePlane(CameraData);
@@ -129,6 +138,31 @@ namespace RayTracer
 				UpdateSpheresInScene();
 				DrawIntersections(CameraData);
 			}
+		}
+
+		private Triangle CreateRandomTriangle(float3 center, float distanceMin, float distanceMax)
+		{
+			var r0 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
+			var r1 = Random.insideUnitCircle;
+			var r2 = Random.insideUnitCircle;
+			var p0 = center + new float3(r0.x, r0.y, 0f);
+			var p1 = center + new float3(r1.x, r1.y, 0f);
+			var p2 = center + new float3(r2.x, r2.y, 0f);
+
+			return new Triangle
+			{
+				Vertex0 = p0,
+				Vertex1 = p1,
+				Vertex2 = p2
+			};
+		}
+
+		private List<Triangle> CreateTriangles(float3 center)
+		{
+			return new List<Triangle>
+			{
+				CreateRandomTriangle(center, 5f, 15f)
+			};
 		}
 
 		private void UpdateSpheresInScene()
@@ -152,6 +186,9 @@ namespace RayTracer
 			}
 		}
 
+		// TODO-Optimize: How to make this better for cache? 
+		// 1. Convert 2d to 1d loop
+		// 2. Invert Loop and Run vs. Spheres first, then Run vs. other shapes
 		private void DrawIntersections(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
