@@ -272,8 +272,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ImagePlane:
     Resolution:
-      X: 50
-      Y: 50
+      X: 100
+      Y: 100
     DistanceToCamera: 10
     HalfHorizontalLength: 20
     HalfVerticalLength: 10
@@ -434,6 +434,10 @@ PrefabInstance:
     - target: {fileID: 6824821233459684901, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_Name
       value: Triangle
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824821233459684901, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824821233459684903, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_RootOrder

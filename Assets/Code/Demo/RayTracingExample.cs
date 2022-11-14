@@ -361,6 +361,7 @@ namespace RayTracer
 			Debug.Assert(RMath.IsNormalized(surfaceNormal));
 
 			var lightDotNormal = math.dot(lightDirection, surfaceNormal);
+			// Angle works like this since both vectors are normalized
 			var angle = math.degrees(math.acos(lightDotNormal));
 			// If this assertion fails, take the absolute of angle
 			Debug.Assert(angle > 0f);
