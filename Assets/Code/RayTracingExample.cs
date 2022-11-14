@@ -50,13 +50,6 @@ namespace RayTracer
 		}
 	}
 
-	[Serializable]
-	public struct Sphere
-	{
-		public float3 Center;
-		public float Radius;
-	}
-
 	public struct CameraData
 	{
 		public float3 Position;
