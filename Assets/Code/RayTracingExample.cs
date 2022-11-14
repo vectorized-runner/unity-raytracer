@@ -76,10 +76,8 @@ public class RayTracingExample : MonoBehaviour
 
 	private CameraData CameraData;
 
-	public bool ToggleDrawBounds = true;
-	public bool ToggleDrawHorizontalLines = true;
-	public bool ToggleDrawVerticalLines = true;
-
+	public bool ToggleDrawImagePlane = true;
+	public bool ToggleDrawRays = true;
 	public Color ImagePlaneColor = Color.red;
 	public Color RayColor = Color.yellow;
 
@@ -87,13 +85,15 @@ public class RayTracingExample : MonoBehaviour
 	{
 		if (!Application.isPlaying)
 			return;
+		if (ToggleDrawImagePlane)
+		{
+			var rect = ImagePlane.GetRect(CameraData);
 
-		var rect = ImagePlane.GetRect(CameraData);
-
-		Gizmos.DrawSphere(rect.TopLeft, 1f);
-		Gizmos.DrawSphere(rect.TopRight, 1f);
-		Gizmos.DrawSphere(rect.BottomLeft, 1f);
-		Gizmos.DrawSphere(rect.BottomRight, 1f);
+			Gizmos.DrawSphere(rect.TopLeft, 1f);
+			Gizmos.DrawSphere(rect.TopRight, 1f);
+			Gizmos.DrawSphere(rect.BottomLeft, 1f);
+			Gizmos.DrawSphere(rect.BottomRight, 1f);
+		}
 	}
 
 	void Update()
@@ -107,8 +107,15 @@ public class RayTracingExample : MonoBehaviour
 			Up = cam.transform.up
 		};
 
-		DrawImagePlane(CameraData);
-		DrawRays(CameraData);
+		if (ToggleDrawImagePlane)
+		{
+			DrawImagePlane(CameraData);
+		}
+
+		if (ToggleDrawRays)
+		{
+			DrawRays(CameraData);
+		}
 	}
 
 	private void DrawRays(CameraData cameraData)
@@ -134,11 +141,7 @@ public class RayTracingExample : MonoBehaviour
 
 	void DrawImagePlane(CameraData cameraData)
 	{
-		if (ToggleDrawBounds)
-		{
-			DrawBounds(cameraData);
-		}
-
+		DrawBounds(cameraData);
 		DrawLines(cameraData);
 	}
 
@@ -146,33 +149,26 @@ public class RayTracingExample : MonoBehaviour
 	{
 		var start = ImagePlane.GetRect(cameraData).TopLeft;
 		var resolutionX = ImagePlane.Resolution.X;
-
 		var up = cameraData.Up;
 		var right = cameraData.Right;
 
-		if (ToggleDrawHorizontalLines)
+		// Horizontal Lines
+		for (var x = 0; x <= resolutionX; x++)
 		{
-			// Horizontal Lines
-			for (var x = 0; x <= resolutionX; x++)
-			{
-				var moveRightLength = ImagePlane.HorizontalLength * x / resolutionX;
-				var lineStart = start + right * moveRightLength;
-				var lineEnd = lineStart - up * ImagePlane.VerticalLength;
-				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
-			}
+			var moveRightLength = ImagePlane.HorizontalLength * x / resolutionX;
+			var lineStart = start + right * moveRightLength;
+			var lineEnd = lineStart - up * ImagePlane.VerticalLength;
+			Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 		}
 
-		if (ToggleDrawVerticalLines)
+		var resolutionY = ImagePlane.Resolution.Y;
+		// Vertical Lines
+		for (var y = 0; y <= resolutionY; y++)
 		{
-			var resolutionY = ImagePlane.Resolution.Y;
-			// Vertical Lines
-			for (var y = 0; y <= resolutionY; y++)
-			{
-				var moveDownLength = ImagePlane.VerticalLength * y / resolutionY;
-				var lineStart = start - up * moveDownLength;
-				var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
-				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
-			}
+			var moveDownLength = ImagePlane.VerticalLength * y / resolutionY;
+			var lineStart = start - up * moveDownLength;
+			var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
+			Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 		}
 	}
 
