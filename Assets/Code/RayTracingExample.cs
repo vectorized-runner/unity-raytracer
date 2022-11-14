@@ -2,10 +2,6 @@ using System;
 using Unity.Mathematics;
 using UnityEngine;
 
-public enum DrawingMode
-{
-	
-}
 
 [Serializable]
 public struct Ray
@@ -58,10 +54,10 @@ public struct ImagePlane
 
 		return new ImageRect
 		{
-			TopLeft = center -halfRight + halfUp,
+			TopLeft = center - halfRight + halfUp,
 			TopRight = center + halfRight + halfUp,
 			BottomRight = center + halfRight - halfUp,
-			BottomLeft = center -halfRight - halfUp,
+			BottomLeft = center - halfRight - halfUp,
 		};
 	}
 }
@@ -86,22 +82,18 @@ public class RayTracingExample : MonoBehaviour
 
 	public Color ImagePlaneColor = Color.red;
 	public Color RayColor = Color.yellow;
+
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
 			return;
-		
+
 		var rect = ImagePlane.GetRect(CameraData);
 
 		Gizmos.DrawSphere(rect.TopLeft, 1f);
 		Gizmos.DrawSphere(rect.TopRight, 1f);
 		Gizmos.DrawSphere(rect.BottomLeft, 1f);
 		Gizmos.DrawSphere(rect.BottomRight, 1f);
-		
-		// Gizmos.DrawLine(rect.TopLeft, rect.TopRight);
-		// Gizmos.DrawLine(rect.TopLeft, rect.BottomLeft);
-		// Gizmos.DrawLine(rect.TopRight, rect.BottomRight);
-		// Gizmos.DrawLine(rect.BottomLeft, rect.BottomRight);
 	}
 
 	void Update()
@@ -116,9 +108,30 @@ public class RayTracingExample : MonoBehaviour
 		};
 
 		DrawImagePlane(CameraData);
+		DrawRays(CameraData);
 	}
 
-	// TODO: All these positions needs to rotate with camera
+	private void DrawRays(CameraData cameraData)
+	{
+		var resX = ImagePlane.Resolution.X;
+		var resY = ImagePlane.Resolution.Y;
+		var topLeft = ImagePlane.GetRect(cameraData).TopLeft;
+		var up = cameraData.Up;
+		var right = cameraData.Right;
+		var horizontalLength = ImagePlane.HorizontalLength;
+		var verticalLength = ImagePlane.VerticalLength;
+
+		for (int x = 0; x < resX; x++)
+		for (int y = 0; y < resY; y++)
+		{
+			// Draw (x,y) pixel
+			var rightMove = (x + 0.5f) * horizontalLength / resX;
+			var downMove = (y + 0.5f) * verticalLength / resY;
+			var point = topLeft + rightMove * right - up * downMove;
+			Debug.DrawLine(cameraData.Position, point, RayColor);
+		}
+	}
+
 	void DrawImagePlane(CameraData cameraData)
 	{
 		if (ToggleDrawBounds)
@@ -142,9 +155,9 @@ public class RayTracingExample : MonoBehaviour
 			// Horizontal Lines
 			for (var x = 0; x <= resolutionX; x++)
 			{
-				var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
-				var lineStart = start - up * moveDownLength;
-				var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
+				var moveRightLength = ImagePlane.HorizontalLength * x / resolutionX;
+				var lineStart = start + right * moveRightLength;
+				var lineEnd = lineStart - up * ImagePlane.VerticalLength;
 				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
@@ -152,13 +165,12 @@ public class RayTracingExample : MonoBehaviour
 		if (ToggleDrawVerticalLines)
 		{
 			var resolutionY = ImagePlane.Resolution.Y;
-
 			// Vertical Lines
 			for (var y = 0; y <= resolutionY; y++)
 			{
-				var moveRightLength = ImagePlane.HorizontalLength * y / resolutionY;
-				var lineStart = start + right * moveRightLength;
-				var lineEnd = lineStart - up * ImagePlane.VerticalLength;
+				var moveDownLength = ImagePlane.VerticalLength * y / resolutionY;
+				var lineStart = start - up * moveDownLength;
+				var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
 				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
@@ -172,9 +184,5 @@ public class RayTracingExample : MonoBehaviour
 		Debug.DrawLine(rect.TopLeft, rect.BottomLeft, color);
 		Debug.DrawLine(rect.TopRight, rect.BottomRight, color);
 		Debug.DrawLine(rect.BottomLeft, rect.BottomRight, color);
-	}
-
-	void DrawIntersections()
-	{
 	}
 }
