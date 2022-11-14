@@ -275,7 +275,6 @@ namespace RayTracer
 			}
 		}
 
-
 		public IntersectionResult GetRayIntersectionWithScene(Ray ray)
 		{
 			var smallestIntersectionDistance = float.MaxValue;
@@ -336,6 +335,16 @@ namespace RayTracer
 				const float shadowRayEpsilon = 0.0001f;
 				var shadowRayOrigin = pointOnSurface + surfaceNormal * shadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
+				var intersectResult = GetRayIntersectionWithScene(shadowRay);
+
+				if (intersectResult.ObjectType != ObjectType.None)
+				{
+					// This pixel is under shadow for that light
+					continue;
+				}
+				
+				// Shadow ray hit this object again, shouldn't happen
+				Debug.Assert(!(intersectResult.ObjectType == objectType && intersectResult.ObjectIndex == objectIndex));
 				
 				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
 				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
