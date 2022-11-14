@@ -335,10 +335,11 @@ namespace RayTracer
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
-				var directionToLight = math.normalize(lightPosition - pointOnSurface);
-				var distanceSq = math.distancesq(pointOnSurface, lightPosition);
-				var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, material.DiffuseReflectance, surfaceNormal, directionToLight);
-				result += rgb;
+				var lightDirection = math.normalize(lightPosition - pointOnSurface);
+				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
+				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
+				result += diffuseRgb;
 			}
 
 			foreach (var ambientLight in AmbientLights)
@@ -378,18 +379,17 @@ namespace RayTracer
 			return new Rgb(ambientRadiance * ambientReflectance);
 		}
 
-		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)
+		private Rgb CalculateDiffuse(float receivedIrradiance, float3 diffuseReflectance, float3 surfaceNormal, float3 lightDirection)
 		{
-			Debug.Assert(lightIntensity > 0f);
-			Debug.Assert(distanceToLightSquared > 0f);
+			Debug.Assert(receivedIrradiance >= 0f);
 			Debug.Assert(RMath.IsNormalized(surfaceNormal));
-			Debug.Assert(RMath.IsNormalized(directionToLight));
+			Debug.Assert(RMath.IsNormalized(lightDirection));
 			
-			var cosTheta = math.max(0, math.dot(directionToLight, surfaceNormal));
+			var cosNormalAndLightDir = math.max(0, math.dot(lightDirection, surfaceNormal));
 			
 			return new Rgb
 			{
-				Value = diffuseReflectance * cosTheta * (lightIntensity / distanceToLightSquared)
+				Value = diffuseReflectance * cosNormalAndLightDir * receivedIrradiance
 			};
 		}
 
