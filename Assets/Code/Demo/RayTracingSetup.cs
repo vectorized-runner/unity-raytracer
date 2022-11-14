@@ -417,10 +417,8 @@ namespace RayTracer
 
 				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
-					lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
-					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 
 				if (material.IsMirror)
 				{
