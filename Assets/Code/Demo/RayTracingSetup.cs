@@ -11,7 +11,7 @@ namespace RayTracer
 	{
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
-		public int ReflectionBounces = 0;
+		public int MaxReflectionBounces = 0;
 
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawPixelRays = true;
@@ -288,7 +288,7 @@ namespace RayTracer
 					Direction = math.normalize(pixelPosition - cameraPosition)
 				};
 				var index = GetPixelIndex(new int2(x, y), resX);
-				PixelColors[index] = ShadePixel(ray, cameraPosition).Color;
+				PixelColors[index] = ShadePixel(ray, cameraPosition, 0).Color;
 			}
 		}
 
@@ -367,8 +367,10 @@ namespace RayTracer
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition)
+		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
 		{
+			Debug.Assert(RMath.IsNormalized(pixelRay.Direction));
+			
 			var hitResult = RaySceneIntersection(pixelRay);
 			var pixelRayHitObject = hitResult.ObjectId;
 			if (pixelRayHitObject.Type == ObjectType.None)
@@ -385,6 +387,7 @@ namespace RayTracer
 			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var color = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
+			var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 
 			foreach (var pointLight in PointLights)
 			{
@@ -409,45 +412,20 @@ namespace RayTracer
 				// Shadow ray hit this object again, shouldn't happen
 				Debug.Assert(shadowRayHitResult.ObjectId != pixelRayHitObject);
 
-				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
 				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
-
-				if (material.IsMirror)
-				{
-					// Bounce the first one manually to avoid recalculation of color
-					var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
-					var mirrorReflectance = material.MirrorReflectance;
-					color += PathTrace(reflectRay, cameraPosition, cameraDirection, mirrorReflectance, 1);
-				}
-
-
 				color += diffuseRgb + specularRgb;
+			}
+			
+			if (material.IsMirror && currentRayBounce < MaxReflectionBounces)
+			{
+				var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
+				var mirrorReflectance = material.MirrorReflectance;
+				color += new Rgb(mirrorReflectance * ShadePixel(reflectRay, cameraPosition, currentRayBounce + 1).Value);
 			}
 
 			return color;
-		}
-
-		// TODO-Implementation: Ensure that we will run full color equation on these objects
-		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance, int currentBounces)
-		{
-			if (currentBounces >= ReflectionBounces)
-				return new Rgb(0);
-
-			var result = RaySceneIntersection(ray);
-			var objectId = result.ObjectId;
-			if (objectId.Type == ObjectType.None)
-				return new Rgb(0);
-
-			var surfacePoint = ray.GetPoint(result.Distance);
-			var thisColor = ShadePixel(ray, cameraPosition);
-			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
-			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
-			var hitMirrorReflectance = GetMirrorReflectance(objectId);
-			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance, currentBounces + 1);
-
-			return new Rgb((thisColor + recursiveTrace).Value * mirrorReflectance);
 		}
 
 		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection)
