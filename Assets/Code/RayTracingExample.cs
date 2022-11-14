@@ -71,7 +71,7 @@ namespace RayTracer
 		private CameraData CameraData;
 
 		public bool ToggleDrawImagePlane = true;
-		public bool ToggleDrawRays = true;
+		public bool ToggleDrawPixelRays = true;
 		public bool ToggleDrawIntersections = true;
 		public bool ToggleDrawPixelColors = true;
 
@@ -171,20 +171,20 @@ namespace RayTracer
 			}
 
 			DrawTriangles();
+			UpdateSpheresInScene();
 			
 			if (ToggleDrawImagePlane)
 			{
 				DrawImagePlane(CameraData);
 			}
 
-			if (ToggleDrawRays)
+			if (ToggleDrawPixelRays)
 			{
 				DrawRays(CameraData);
 			}
 
 			if (ToggleDrawIntersections)
 			{
-				UpdateSpheresInScene();
 				DrawIntersections(CameraData);
 			}
 		}
