@@ -111,7 +111,7 @@ namespace RayTracer
 		{
 			AmbientLight = default;
 			var ambientLights = FindObjectsOfType<SceneAmbientLight>();
-			
+
 			switch (ambientLights.Length)
 			{
 				case > 1:
@@ -149,7 +149,7 @@ namespace RayTracer
 				TriangleMaterials.Add(triangle.Material);
 			}
 		}
-		
+
 		void Update()
 		{
 			var cam = Camera.main;
@@ -272,7 +272,7 @@ namespace RayTracer
 				var rightMove = (x + 0.5f) * horizontalLength / resX;
 				var downMove = (y + 0.5f) * verticalLength / resY;
 				var pixelPosition = topLeft + rightMove * right - up * downMove;
-				var ray = new Ray
+				var pixelRay = new Ray
 				{
 					Origin = cameraPosition,
 					Direction = math.normalize(pixelPosition - cameraPosition)
@@ -280,47 +280,17 @@ namespace RayTracer
 
 				// Check intersection against each object
 				{
-					var smallestIntersectionDistance = float.MaxValue;
-					var hitObject = ObjectType.None;
-					var hitObjectIndex = -1;
-
-					for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
-					{
-						var sphere = Spheres[sphereIndex];
-						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
-						{
-							if (smallestIntersectionDistance > closestIntersectionDistance)
-							{
-								smallestIntersectionDistance = closestIntersectionDistance;
-								hitObject = ObjectType.Sphere;
-								hitObjectIndex = sphereIndex;
-							}
-						}
-					}
-
-					for (var triIndex = 0; triIndex < Triangles.Count; triIndex++)
-					{
-						var triangle = Triangles[triIndex];
-						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
-						{
-							if (smallestIntersectionDistance > intersectionDistance)
-							{
-								smallestIntersectionDistance = intersectionDistance;
-								hitObject = ObjectType.Triangle;
-								hitObjectIndex = triIndex;
-							}
-						}
-					}
-
 					var index = GetPixelIndex(new int2(x, y), resX);
-					if (hitObject != ObjectType.None)
+					var intersectionResult = GetRayIntersectionWithScene(pixelRay);
+					
+					if (intersectionResult.ObjectType != ObjectType.None)
 					{
-						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
-						PixelColors[index] = CalculatePixelColor(cameraPosition, intersectionPoint, hitObject, hitObjectIndex);
+						var intersectionPoint = pixelRay.GetPoint(intersectionResult.Distance);
+						PixelColors[index] = CalculatePixelColor(cameraPosition, intersectionPoint, intersectionResult.ObjectType, intersectionResult.ObjectIndex);
 
 						if (ToggleDrawIntersections)
 						{
-							Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
+							Debug.DrawLine(pixelRay.Origin, intersectionPoint, IntersectionColor);
 						}
 					}
 					else
@@ -329,6 +299,49 @@ namespace RayTracer
 					}
 				}
 			}
+		}
+
+
+		public IntersectionResult GetRayIntersectionWithScene(Ray ray)
+		{
+			var smallestIntersectionDistance = float.MaxValue;
+			var hitObject = ObjectType.None;
+			var hitObjectIndex = -1;
+
+			for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
+			{
+				var sphere = Spheres[sphereIndex];
+				if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
+				{
+					if (smallestIntersectionDistance > closestIntersectionDistance)
+					{
+						smallestIntersectionDistance = closestIntersectionDistance;
+						hitObject = ObjectType.Sphere;
+						hitObjectIndex = sphereIndex;
+					}
+				}
+			}
+
+			for (var triIndex = 0; triIndex < Triangles.Count; triIndex++)
+			{
+				var triangle = Triangles[triIndex];
+				if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+				{
+					if (smallestIntersectionDistance > intersectionDistance)
+					{
+						smallestIntersectionDistance = intersectionDistance;
+						hitObject = ObjectType.Triangle;
+						hitObjectIndex = triIndex;
+					}
+				}
+			}
+
+			return new IntersectionResult
+			{
+				Distance = smallestIntersectionDistance,
+				ObjectType = hitObject,
+				ObjectIndex = hitObjectIndex
+			};
 		}
 
 		// TODO-Implement: Handle multiple lights
