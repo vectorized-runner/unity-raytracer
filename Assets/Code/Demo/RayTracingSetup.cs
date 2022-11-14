@@ -295,7 +295,7 @@ namespace RayTracer
 
 					if (intersectionResult.ObjectId.Type != ObjectType.None)
 					{
-						PixelColors[index] = CalculatePixelColor(ray, cameraPosition, intersectionResult).Color;
+						PixelColors[index] = ShadePixel(ray, cameraPosition, intersectionResult).Color;
 
 						if (ToggleDrawIntersections)
 						{
@@ -386,7 +386,7 @@ namespace RayTracer
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb CalculatePixelColor(Ray ray, float3 cameraPosition, IntersectionResult result)
+		private Rgb ShadePixel(Ray ray, float3 cameraPosition, IntersectionResult result)
 		{
 			var surfacePoint = ray.GetPoint(result.Distance);
 			var objectId = result.ObjectId;
@@ -449,7 +449,7 @@ namespace RayTracer
 				return new Rgb(0);
 
 			var surfacePoint = ray.GetPoint(result.Distance);
-			var thisColor = CalculatePixelColor(ray, cameraPosition, result);
+			var thisColor = ShadePixel(ray, cameraPosition, result);
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 			var hitMirrorReflectance = GetMirrorReflectance(objectId);
