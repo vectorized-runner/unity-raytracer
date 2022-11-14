@@ -267,6 +267,8 @@ public class RayTracingExample : MonoBehaviour
 	private int SolveQuadraticEquation(float a, float b, float c, out float x0, out float x1)
 	{
 		var discriminant = b * b - 4 * a * c;
+		// Debug.Log($"a: {a}, b: {b}, c: {c}, disc: {discriminant}");
+		
 		if (discriminant < 0)
 		{
 			x0 = 0;
