@@ -18,6 +18,13 @@ namespace RayTracer
 				var triangleCount = unityTris.Length;
 				Debug.Assert(triangleCount % 3 == 0);
 
+				var l2w = transform.localToWorldMatrix;
+
+				for (int i = 0; i < unityVerts.Length; i++)
+				{
+					unityVerts[i] = l2w.MultiplyPoint3x4(unityVerts[i]);
+				}
+
 				var tris = new Triangle[triangleCount / 3];
 				var normals = new float3[triangleCount / 3];
 
@@ -28,7 +35,7 @@ namespace RayTracer
 					var p2 = unityVerts[unityTris[i + 2]];
 					var triangle = new Triangle { Vertex0 = p0, Vertex1 = p1, Vertex2 = p2 };
 					tris[i / 3] = triangle;
-					normals[i / 3] = triangle.Normal;
+					normals[i / 3] = -triangle.Normal;
 				}
 
 				return new Mesh
