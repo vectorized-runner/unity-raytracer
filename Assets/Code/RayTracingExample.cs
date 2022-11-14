@@ -185,13 +185,30 @@ public class RayTracingExample : MonoBehaviour
 				Origin = cameraPosition,
 				Direction = math.normalize(pointOnPlane - cameraPosition)
 			};
-			
+
 			// Check intersection against each sphere
-			
-			
+			foreach (var sphere in Spheres)
+			{
+				switch (RaySphereIntersection(ray, sphere, out var intersectA, out var intersectB))
+				{
+					case 0:
+					{
+						break;
+					}
+					case 1:
+					{
+						Debug.DrawLine(ray.Origin, intersectA, IntersectionColor);
+						break;
+					}
+					case 2:
+					{
+						Debug.DrawLine(ray.Origin, intersectA, IntersectionColor);
+						Debug.DrawLine(ray.Origin, intersectB, IntersectionColor);
+						break;
+					}
+				}
+			}
 		}
-		
-		throw new NotImplementedException();
 	}
 
 	private static bool IsLengthEqual(float3 v, float length)
@@ -204,7 +221,7 @@ public class RayTracingExample : MonoBehaviour
 	private int RaySphereIntersection(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
 	{
 		Debug.Assert(IsLengthEqual(ray.Direction, 1f));
-		
+
 		var oc = sphere.Center - ray.Origin;
 		var rSquared = sphere.Radius * sphere.Radius;
 		var a = 1f;
@@ -244,6 +261,7 @@ public class RayTracingExample : MonoBehaviour
 			x1 = 0;
 			return 0;
 		}
+
 		if (discriminant == 0)
 		{
 			x0 = x1 = 0.5f * -b / a;
