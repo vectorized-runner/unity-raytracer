@@ -81,6 +81,24 @@ namespace RayTracer
 			return new int2(pixelIndex % resolutionX, pixelIndex / resolutionX);
 		}
 
+		private void FetchSceneComponents()
+		{
+			UpdateTriangles();
+			FetchSpheresInScene();
+		}
+
+		private void UpdateTriangles()
+		{
+			if (Input.GetKeyDown(KeyCode.Space))
+			{
+				Triangles.Clear();
+				var center = CameraData.Position + new float3(0f, 0f, 15f);
+				Triangles = CreateTriangles(center);
+
+				Debug.Log("Created Triangles!");
+			}
+		}
+		
 		void Update()
 		{
 			var cam = Camera.main;
@@ -94,18 +112,8 @@ namespace RayTracer
 			};
 
 			ClearScreen();
-
-			if (Input.GetKeyDown(KeyCode.Space))
-			{
-				Triangles.Clear();
-				var center = CameraData.Position + new float3(0f, 0f, 15f);
-				Triangles = CreateTriangles(center);
-
-				Debug.Log("Created Triangles!");
-			}
-
+			FetchSceneComponents();
 			DrawTriangles();
-			UpdateSpheresInScene();
 
 			if (ToggleDrawImagePlane)
 			{
@@ -171,7 +179,7 @@ namespace RayTracer
 			return pixelPosition.x + pixelPosition.y * resolutionX;
 		}
 
-		private void UpdateSpheresInScene()
+		private void FetchSpheresInScene()
 		{
 			Spheres.Clear();
 			SphereColors.Clear();
