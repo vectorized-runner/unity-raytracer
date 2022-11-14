@@ -17,12 +17,14 @@ namespace RayTracer
 		public bool ToggleDrawPixelRays = true;
 		public bool ToggleDrawIntersections = true;
 		public bool ToggleDrawPixelColors = true;
+		public bool ToggleDrawSurfaceNormals = true;
 
 		// These are for debug drawing
 		public Color ImagePlaneColor = Color.red;
 		public Color RayColor = Color.yellow;
 		public Color IntersectionColor = Color.cyan;
-		public Color TriangleColor = Color.green;
+		public Color TriangleColor = Color.blue;
+		public Color SurfaceNormalColor = Color.green;
 
 		// Separate hot and cold data
 		public List<Sphere> Spheres;
@@ -31,6 +33,7 @@ namespace RayTracer
 		public List<PointLightData> PointLights;
 
 		public List<Triangle> Triangles;
+		public List<float3> TriangleNormals;
 
 		private Color[] PixelColors = Array.Empty<Color>();
 
@@ -106,8 +109,11 @@ namespace RayTracer
 			if (Input.GetKeyDown(KeyCode.Space))
 			{
 				Triangles.Clear();
+				TriangleNormals.Clear();
+
 				var center = CameraData.Position + new float3(0f, 0f, 15f);
 				Triangles = CreateTriangles(center);
+				TriangleNormals.AddRange(Triangles.Select(tri => tri.Normal));
 
 				Debug.Log("Created Triangles!");
 			}
@@ -160,6 +166,11 @@ namespace RayTracer
 				Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, TriangleColor);
 				Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, TriangleColor);
 				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, TriangleColor);
+
+				if (ToggleDrawSurfaceNormals)
+				{
+					Debug.DrawRay(triangle.Center, triangle.Normal * 5f, SurfaceNormalColor);
+				}
 			}
 		}
 
