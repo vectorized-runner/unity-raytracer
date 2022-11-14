@@ -204,6 +204,7 @@ namespace RayTracer
 		// TODO-Optimize: How to make this better for cache? 
 		// 1. Convert 2d to 1d loop
 		// 2. Invert Loop and Run vs. Spheres first, then Run vs. other shapes
+		// Another idea: Run Sphere vs. Pixels first, Then Run Triangle vs. Pixels etc... (homogenous)
 		private void DrawIntersections(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
@@ -230,19 +231,32 @@ namespace RayTracer
 
 				// Check intersection against each object
 				{
+					var smallestIntersectionDistance = float.MinValue;
+					
 					foreach (var sphere in Spheres)
 					{
-						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersection))
+						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
 						{
-							Debug.DrawLine(ray.Origin, closestIntersection, IntersectionColor);
+							// if (closestIntersectionDistance > smallestIntersectionDistance)
+							// {
+							// 	
+							// }
 						}
 					}
 					foreach (var triangle in Triangles)
 					{
-						if (RMath.RayTriangleIntersection(ray, triangle, out var intersection))
+						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 						{
-							Debug.DrawLine(ray.Origin, intersection, IntersectionColor);
+							if (smallestIntersectionDistance > intersectionDistance)
+							{
+								smallestIntersectionDistance = intersectionDistance;
+							}
 						}
+					}
+					if (smallestIntersectionDistance > 0f)
+					{
+						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
+						Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
 					}
 				}
 			}

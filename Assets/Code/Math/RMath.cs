@@ -9,7 +9,7 @@ namespace RayTracer
 		private const float Epsilon = 0.00001f;
 
 		// TODO-Port: Code taken from the internet, you know what to do.
-		public static bool RayTriangleIntersection(Ray ray, Triangle triangle, out float3 intersection)
+		public static bool RayTriangleIntersection(Ray ray, Triangle triangle, out float intersectionDistance)
 		{
 			var vertex0 = triangle.Vertex0;
 			var vertex1 = triangle.Vertex1;
@@ -21,7 +21,7 @@ namespace RayTracer
 
 			if (a > -Epsilon && a < Epsilon)
 			{
-				intersection = default;
+				intersectionDistance = 0f;
 				return false; // This ray is parallel to this triangle.
 			}
 
@@ -30,7 +30,7 @@ namespace RayTracer
 			var u = f * dot(s, h);
 			if (u < 0.0f || u > 1.0f)
 			{
-				intersection = default;
+				intersectionDistance = 0f;
 				return false;
 			}
 
@@ -38,7 +38,7 @@ namespace RayTracer
 			var v = f * dot(ray.Direction, q);
 			if (v < 0.0f || u + v > 1.0f)
 			{
-				intersection = default;
+				intersectionDistance = 0f;
 				return false;
 			}
 
@@ -46,12 +46,12 @@ namespace RayTracer
 			var t = f * dot(edge2, q);
 			if (t > Epsilon) // ray intersection
 			{
-				intersection = ray.GetPoint(t);
+				intersectionDistance = t;
 				return true;
 			}
 
 			// This means that there is a line intersection but not a ray intersection.
-			intersection = default;
+			intersectionDistance = 0f;
 			return false;
 		}
 
