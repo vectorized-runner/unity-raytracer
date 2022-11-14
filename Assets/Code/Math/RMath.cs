@@ -11,9 +11,9 @@ namespace RayTracer
 		// TODO-Port: Code taken from the internet, you know what to do.
 		public static bool RayTriangleIntersection(Ray ray, Triangle triangle, out float3 intersection)
 		{
-			var vertex0 = triangle.Vertices.x;
-			var vertex1 = triangle.Vertices.y;
-			var vertex2 = triangle.Vertices.z;
+			var vertex0 = triangle.Vertex0;
+			var vertex1 = triangle.Vertex1;
+			var vertex2 = triangle.Vertex2;
 			var edge1 = vertex1 - vertex0;
 			var edge2 = vertex2 - vertex0;
 			var h = cross(ray.Direction, edge2);
