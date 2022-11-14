@@ -81,7 +81,10 @@ namespace RayTracer
 		public Color IntersectionColor = Color.cyan;
 		public Color TriangleColor = Color.green;
 
+		// Separate hot and cold data
 		public List<Sphere> Spheres;
+		public List<Color> SphereColors; 
+		
 		public List<Triangle> Triangles;
 
 		private Color[] PixelColors = Array.Empty<Color>();
@@ -228,6 +231,8 @@ namespace RayTracer
 		private void UpdateSpheresInScene()
 		{
 			Spheres.Clear();
+			SphereColors.Clear();
+			
 			var meshFiltersInScene = FindObjectsOfType<MeshFilter>();
 
 			foreach (var meshFilter in meshFiltersInScene)
@@ -242,6 +247,9 @@ namespace RayTracer
 						Center = meshFilter.gameObject.transform.position,
 						RadiusSquared = radius * radius
 					});
+
+					var color = meshFilter.GetComponent<MeshRenderer>().sharedMaterial.color;
+					SphereColors.Add(color);
 				}
 			}
 		}
