@@ -96,8 +96,13 @@ public class RayTracingExample : MonoBehaviour
 	public Color RayColor = Color.yellow;
 	public Color IntersectionColor = Color.cyan;
 
-	private List<Sphere> Spheres;
-	
+	public List<Sphere> Spheres;
+
+	private void Start()
+	{
+		Spheres = new List<Sphere>();
+	}
+
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
