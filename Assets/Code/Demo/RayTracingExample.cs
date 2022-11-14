@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace RayTracer
 {
+	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
+	// TODO-Optimization: Consider not storing Triangle normals
 	public class RayTracingExample : MonoBehaviour
 	{
 		public ImagePlane ImagePlane;
@@ -323,7 +325,7 @@ namespace RayTracer
 			};
 		}
 
-		// TODO-Optimize: Cache anything that can be cached here.
+		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		private Rgb CalculatePixelColor(Ray ray, float3 cameraPosition, IntersectionResult result)
 		{
@@ -402,7 +404,6 @@ namespace RayTracer
 			return new Ray(newRayOrigin, newRayNormal);
 		}
 
-		// TODO: Handle angle greater than 90, it's zero in that case.
 		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal,
 			float3 specularReflectance, float receivedIrradiance, float phongExponent)
 		{
