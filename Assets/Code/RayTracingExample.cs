@@ -176,7 +176,7 @@ namespace RayTracer
 		{
 			return new List<Triangle>
 			{
-				CreateRandomTriangle(center, 5f, 15f)
+				CreateRandomTriangle(center, 15f, 30f)
 			};
 		}
 
@@ -228,12 +228,21 @@ namespace RayTracer
 					Direction = math.normalize(pointOnPlane - cameraPosition)
 				};
 
-				// Check intersection against each sphere
-				foreach (var sphere in Spheres)
+				// Check intersection against each object
 				{
-					if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersection))
+					foreach (var sphere in Spheres)
 					{
-						Debug.DrawLine(ray.Origin, closestIntersection, IntersectionColor);
+						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersection))
+						{
+							Debug.DrawLine(ray.Origin, closestIntersection, IntersectionColor);
+						}
+					}
+					foreach (var triangle in Triangles)
+					{
+						if (RMath.RayTriangleIntersection(ray, triangle, out var intersection))
+						{
+							Debug.DrawLine(ray.Origin, intersection, IntersectionColor);
+						}
 					}
 				}
 			}
