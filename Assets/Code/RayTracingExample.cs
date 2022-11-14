@@ -67,6 +67,7 @@ public struct ImagePlane
 	}
 }
 
+[Serializable]
 public struct Sphere
 {
 	public float3 Center;
@@ -89,7 +90,7 @@ public class RayTracingExample : MonoBehaviour
 
 	public bool ToggleDrawImagePlane = true;
 	public bool ToggleDrawRays = true;
-	private bool ToggleDrawIntersections = true;
+	public bool ToggleDrawIntersections = true;
 
 	public Color ImagePlaneColor = Color.red;
 	public Color RayColor = Color.yellow;
@@ -234,12 +235,10 @@ public class RayTracingExample : MonoBehaviour
 	private int RaySphereIntersection(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
 	{
 		Debug.Assert(IsLengthEqual(ray.Direction, 1f));
-
-		var oc = sphere.Center - ray.Origin;
-		var rSquared = sphere.Radius * sphere.Radius;
+		var oc = ray.Origin - sphere.Center;
 		var a = 1f;
 		var b = 2 * math.dot(ray.Direction, oc);
-		var c = math.dot(oc, oc) - rSquared;
+		var c = math.dot(oc, oc) - sphere.Radius * sphere.Radius;
 
 		switch (SolveQuadraticEquation(a, b, c, out var x0, out var x1))
 		{
@@ -281,8 +280,8 @@ public class RayTracingExample : MonoBehaviour
 			return 1;
 		}
 
-		x0 = 0.5f * (-b + discriminant) / a;
-		x1 = 0.5f * (-b - discriminant) / a;
+		x0 = 0.5f * (-b + math.sqrt(discriminant)) / a;
+		x1 = 0.5f * (-b - math.sqrt(discriminant)) / a;
 		return 2;
 	}
 
