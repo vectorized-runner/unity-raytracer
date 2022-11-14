@@ -9,6 +9,7 @@ namespace RayTracer
 	{
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
+		public int ReflectionBounces = 0;
 		
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawPixelRays = true;
@@ -39,6 +40,8 @@ namespace RayTracer
 
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
+		
+		const float ShadowRayEpsilon = 0.0001f;
 
 		private void Start()
 		{
@@ -255,7 +258,7 @@ namespace RayTracer
 				// Check intersection against each object
 				{
 					var index = GetPixelIndex(new int2(x, y), resX);
-					var intersectionResult = GetRayIntersectionWithScene(pixelRay);
+					var intersectionResult = RaySceneIntersection(pixelRay);
 					
 					if (intersectionResult.ObjectType != ObjectType.None)
 					{
@@ -275,7 +278,7 @@ namespace RayTracer
 			}
 		}
 
-		public IntersectionResult GetRayIntersectionWithScene(Ray ray)
+		public IntersectionResult RaySceneIntersection(Ray ray)
 		{
 			var smallestIntersectionDistance = float.MaxValue;
 			var hitObject = ObjectType.None;
@@ -317,26 +320,22 @@ namespace RayTracer
 			};
 		}
 
-		// TODO-Implement: Handle multiple lights
-		// TODO-Implement: Handle non-diffuse types
-		// TODO-Implement: Cache anything that can be cached here.
+		// TODO-Optimize: Cache anything that can be cached here.
 		// TODO-Optimize: There are math inefficiencies here.
-		private Color CalculatePixelColor(float3 cameraPosition, float3 pointOnSurface, ObjectType objectType,
+		private Color CalculatePixelColor(float3 cameraPosition, float3 surfacePoint, ObjectType objectType,
 			int objectIndex)
 		{
-			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
+			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, objectType, objectIndex);
 			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
-				var lightDirection = math.normalize(lightPosition - pointOnSurface);
-
-				const float shadowRayEpsilon = 0.0001f;
-				var shadowRayOrigin = pointOnSurface + surfaceNormal * shadowRayEpsilon;
+				var lightDirection = math.normalize(lightPosition - surfacePoint);
+				var shadowRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
-				var intersectResult = GetRayIntersectionWithScene(shadowRay);
-				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
+				var intersectResult = RaySceneIntersection(shadowRay);
+				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
 
 				if (intersectResult.ObjectType != ObjectType.None)
 				{
@@ -351,14 +350,46 @@ namespace RayTracer
 				// Shadow ray hit this object again, shouldn't happen
 				Debug.Assert(!(intersectResult.ObjectType == objectType && intersectResult.ObjectIndex == objectIndex));
 				
-				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
+				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
 				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+
+				if (material.IsMirror)
+				{
+					finalRgb += CalculateSpecularReflection();
+				}
+				
+				
 				finalRgb += diffuseRgb + specularRgb;
 			}
 
 			return finalRgb.Color;
+		}
+
+		private Rgb CalculateSpecularReflection(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection, float3 lightDirection)
+		{
+			return PathTrace(, 1);
+		}
+
+		private Rgb PathTrace(Ray ray, int currentBounces)
+		{
+			if (currentBounces >= ReflectionBounces)
+				return new Rgb(0);
+
+			var result = RaySceneIntersection(ray);
+			if (result.ObjectType == ObjectType.None)
+				return new Rgb(0);
+			
+			// TODO-Implement: Run Color equation for this object
+			var thisColor = new Rgb(0);
+
+			var surfacePoint = ray.GetPoint(result.Distance);
+			var surfaceNormal = GetSurfaceNormal(surfacePoint, result.ObjectType, result.ObjectIndex);
+			var newRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
+			var newRayNormal = ;
+			var newRay = new Ray(newRayOrigin, newRayNormal);
+			return thisColor + PathTrace(newRay, currentBounces + 1);
 		}
 
 		// TODO: Handle angle greater than 90, it's zero in that case.
@@ -378,7 +409,7 @@ namespace RayTracer
 			// Light is coming from behind the surface 
 			if (angle > 90f)
 			{
-				return new Rgb(float3.zero);
+				return new Rgb(0);
 			}
 
 			var v = lightDirection + cameraDirection;
@@ -389,15 +420,34 @@ namespace RayTracer
 			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
-		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 pointOnSurface,
-			ObjectType objectType, int objectIndex)
+		private float3 GetSurfaceNormal(float3 surfacePoint, ObjectType objectType, int objectIndex)
+		{
+			switch (objectType)
+			{
+				case ObjectType.Sphere:
+					return GetSphereNormal(surfacePoint, objectIndex);
+				case ObjectType.Triangle:
+					return TriangleNormals[objectIndex];
+				case ObjectType.None:
+				default:
+					throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
+			}
+		}
+
+		private float3 GetSphereNormal(float3 surfacePoint, int index)
+		{
+			var sphere = Spheres[index];
+			var surfaceNormal = math.normalize(surfacePoint - sphere.Center);
+			return surfaceNormal;
+		}
+
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectType objectType, int objectIndex)
 		{
 			switch (objectType)
 			{
 				case ObjectType.Sphere:
 				{
-					var sphere = Spheres[objectIndex];
-					var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
+					var surfaceNormal = GetSphereNormal(surfacePoint, objectIndex);
 					var material = SphereMaterials[objectIndex];
 					return (surfaceNormal, material);
 				}

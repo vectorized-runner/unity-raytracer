@@ -11,5 +11,6 @@ namespace RayTracer
 		public float3 MirrorReflectance;
 		public float3 SpecularReflectance;
 		public float PhongExponent;
+		public bool IsMirror;
 	}
 }
