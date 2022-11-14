@@ -28,9 +28,12 @@ public struct ImageRect
 public struct ImagePlane
 {
 	public Resolution Resolution;
+
 	public float DistanceToCamera;
+
 	// Going in +x direction
 	public float HalfHorizontalLength;
+
 	// Going in +y direction
 	public float HalfVerticalLength;
 
@@ -69,28 +72,57 @@ public class RayTracingExample : MonoBehaviour
 {
 	public ImagePlane ImagePlane;
 
+	private CameraData CameraData;
+
+	private void OnCanvasGroupChanged()
+	{
+		throw new NotImplementedException();
+	}
+
+	private void OnDrawGizmos()
+	{
+		if (!Application.isPlaying)
+			return;
+		
+		var rect = ImagePlane.GetRect(CameraData);
+
+		Gizmos.DrawSphere(rect.TopLeft, 1f);
+		Gizmos.DrawSphere(rect.TopRight, 1f);
+		Gizmos.DrawSphere(rect.BottomLeft, 1f);
+		Gizmos.DrawSphere(rect.BottomRight, 1f);
+		
+		Gizmos.DrawLine(rect.TopLeft, rect.TopRight);
+		Gizmos.DrawLine(rect.TopLeft, rect.BottomLeft);
+		Gizmos.DrawLine(rect.TopRight, rect.BottomRight);
+		Gizmos.DrawLine(rect.BottomLeft, rect.BottomRight);
+	}
+
 	void Update()
 	{
 		var cam = Camera.main;
-		var cameraData = new CameraData
+		CameraData = new CameraData
 		{
 			Position = cam.transform.position,
 			Forward = cam.transform.forward,
 			Right = cam.transform.right,
 			Up = cam.transform.up
 		};
-		
-		DrawImagePlane(cameraData);
+
+		DrawImagePlane(CameraData);
 	}
 
 	// TODO: All these positions needs to rotate with camera
 	void DrawImagePlane(CameraData cameraData)
 	{
 		DrawBounds(cameraData);
+		DrawLines(cameraData);
+	}
 
+	private void DrawLines(CameraData cameraData)
+	{
 		var start = ImagePlane.GetRect(cameraData).TopLeft;
 		var resolutionX = ImagePlane.Resolution.X;
-		
+
 		// Horizontal Lines
 		for (var x = 0; x <= resolutionX; x++)
 		{
@@ -99,7 +131,7 @@ public class RayTracingExample : MonoBehaviour
 			var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
 			Debug.DrawLine(lineStart, lineEnd, Color.blue);
 		}
-		
+
 		var resolutionY = ImagePlane.Resolution.Y;
 
 		// Vertical Lines
