@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -285,7 +286,7 @@ namespace RayTracer
 					if (hitObject != ObjectType.None)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
-						PixelColors[index] = CalculatePixelColor(hitObject, hitObjectIndex);
+						PixelColors[index] = CalculatePixelColor(intersectionPoint, hitObject, hitObjectIndex);
 
 						if (ToggleDrawIntersections)
 						{
@@ -299,10 +300,43 @@ namespace RayTracer
 				}
 			}
 		}
-		
-		private Color CalculatePixelColor(ObjectType objectType, int objectIndex)
+
+		// TODO-Implement: Handle multiple lights
+		// TODO-Implement: Handle non-diffuse types
+		// TODO-Implement: Cache anything that can be cached here.
+		// TODO-Optimize: There are math inefficiencies here.
+		private Color CalculatePixelColor(float3 pointOnSurface, ObjectType objectType, int objectIndex)
 		{
-			return Color.white;
+			var result = new Rgb(float3.zero);
+
+			foreach (var pointLight in PointLights)
+			{
+				switch (objectType)
+				{
+					case ObjectType.Sphere:
+					{
+						var sphere = Spheres[objectIndex];
+						var surfaceNormal = math.normalize(pointOnSurface - sphere.Center);
+						var diffuseReflectance = SphereMaterials[objectIndex].DiffuseReflectance;
+						var lightPosition = pointLight.Position;
+						var distanceSq = math.distancesq(pointOnSurface, lightPosition);
+						var directionToLight = math.normalize(lightPosition - pointOnSurface);
+						var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, diffuseReflectance, surfaceNormal, directionToLight);
+						result += rgb;
+						break;
+					}
+					case ObjectType.Triangle:
+					{
+						// TODO-Implement:
+						break;
+					}
+					case ObjectType.None:
+					default:
+						throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
+				}
+			}
+
+			return result.Color;
 		}
 
 		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)
