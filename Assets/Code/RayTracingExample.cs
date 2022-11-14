@@ -194,6 +194,11 @@ namespace RayTracer
 			};
 		}
 
+		private int GetPixelIndex(int2 pixelPosition, int resolutionX)
+		{
+			return pixelPosition.x + pixelPosition.y * resolutionX;
+		}
+
 		private void UpdateSpheresInScene()
 		{
 			Spheres.Clear();
@@ -275,7 +280,7 @@ namespace RayTracer
 					}
 
 					
-					var index = x + y * resX;
+					var index = GetPixelIndex(new int2(x, y), resX);
 					if (foundIntersection)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
