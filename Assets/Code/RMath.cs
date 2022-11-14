@@ -71,25 +71,27 @@ namespace RayTracer
 			}
 		}
 
+		// TODO-Port: Disc == 0 floating point errors? We can just ignore that case because it will never happen
 		public static int SolveQuadraticEquation(float a, float b, float c, out float x0, out float x1)
 		{
 			var discriminant = b * b - 4 * a * c;
 
 			if (discriminant < 0)
 			{
-				x0 = 0;
-				x1 = 0;
+				x0 = x1 = 0;
 				return 0;
 			}
 
-			if (discriminant == 0)
-			{
-				x0 = x1 = 0.5f * -b / a;
-				return 1;
-			}
+			// Ignore Discriminant == 0 because it will not happen with floating point, and we'll use the same point anyway
+			// if (discriminant == 0)
+			// {
+			// 	x0 = x1 = 0.5f * -b / a;
+			// 	return 1;
+			// }
 
-			x0 = 0.5f * (-b - sqrt(discriminant)) / a;
-			x1 = 0.5f * (-b + sqrt(discriminant)) / a;
+			var sqrtDisc = sqrt(discriminant);
+			x0 = 0.5f * (-b - sqrtDisc) / a;
+			x1 = 0.5f * (-b + sqrtDisc) / a;
 			return 2;
 		}
 
