@@ -19,6 +19,19 @@ namespace RayTracer
 			Materials.Clear();
 		}
 	}
+
+	[Serializable]
+	public struct SphereData
+	{
+		public List<Sphere> Spheres;
+		public List<MaterialData> Materials;
+
+		public void Clear()
+		{
+			Spheres.Clear();
+			Materials.Clear();
+		}
+	}
 	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
 	// TODO-Optimization: Consider not storing Triangle normals
 	public class RayTracingSetup : MonoBehaviour
@@ -44,11 +57,7 @@ namespace RayTracer
 		public List<PointLightData> PointLights;
 		public AmbientLightData AmbientLight;
 
-		// Spheres
-		// Separate hot and cold data
-		public List<Sphere> Spheres;
-		public List<MaterialData> SphereMaterials;
-
+		public SphereData SphereData;
 		public TriangleData TriangleData;
 
 		// Meshes
@@ -61,7 +70,12 @@ namespace RayTracer
 
 		private void Start()
 		{
-			Spheres = new List<Sphere>();
+			SphereData = new SphereData
+			{
+				Materials = new List<MaterialData>(),
+				Spheres = new List<Sphere>()
+			};
+
 			TriangleData = new TriangleData
 			{
 				Normals = new List<float3>(),
@@ -84,7 +98,7 @@ namespace RayTracer
 
 			Gizmos.color = color;
 
-			foreach (var sphere in Spheres)
+			foreach (var sphere in SphereData.Spheres)
 			{
 				Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
 			}
@@ -262,14 +276,13 @@ namespace RayTracer
 
 		private void FetchSpheres()
 		{
-			Spheres.Clear();
-			SphereMaterials.Clear();
-
+			SphereData.Clear();
 			var spheres = FindObjectsOfType<SceneSphere>();
+
 			foreach (var sphere in spheres)
 			{
-				Spheres.Add(sphere.Sphere);
-				SphereMaterials.Add(sphere.Material);
+				SphereData.Spheres.Add(sphere.Sphere);
+				SphereData.Materials.Add(sphere.Material);
 			}
 		}
 
@@ -340,9 +353,10 @@ namespace RayTracer
 				}
 			}
 
-			for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
+			var spheres = SphereData.Spheres;
+			for (var sphereIndex = 0; sphereIndex < spheres.Count; sphereIndex++)
 			{
-				var sphere = Spheres[sphereIndex];
+				var sphere = spheres[sphereIndex];
 				if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
 				{
 					if (smallestIntersectionDistance > closestIntersectionDistance)
@@ -495,7 +509,7 @@ namespace RayTracer
 			switch (id.Type)
 			{
 				case ObjectType.Sphere:
-					return SphereMaterials[id.Index].MirrorReflectance;
+					return SphereData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.Triangle:
 					return TriangleData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.MeshTriangle:
@@ -508,7 +522,7 @@ namespace RayTracer
 
 		private float3 GetSphereNormal(float3 surfacePoint, int index)
 		{
-			var sphere = Spheres[index];
+			var sphere = SphereData.Spheres[index];
 			var surfaceNormal = math.normalize(surfacePoint - sphere.Center);
 			return surfaceNormal;
 		}
@@ -521,7 +535,7 @@ namespace RayTracer
 				case ObjectType.Sphere:
 				{
 					var surfaceNormal = GetSphereNormal(surfacePoint, id.Index);
-					var material = SphereMaterials[id.Index];
+					var material = SphereData.Materials[id.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.Triangle:
