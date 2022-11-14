@@ -336,18 +336,22 @@ namespace RayTracer
 				var shadowRayOrigin = pointOnSurface + surfaceNormal * shadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
 				var intersectResult = GetRayIntersectionWithScene(shadowRay);
+				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
 
 				if (intersectResult.ObjectType != ObjectType.None)
 				{
-					// This pixel is under shadow for that light
-					continue;
+					var hitDistanceSq = intersectResult.Distance * intersectResult.Distance;
+					if (hitDistanceSq < lightDistanceSq)
+					{
+						// Shadow ray intersects with an object before light, no contribution from this light
+						continue;
+					}
 				}
 				
 				// Shadow ray hit this object again, shouldn't happen
 				Debug.Assert(!(intersectResult.ObjectType == objectType && intersectResult.ObjectIndex == objectIndex));
 				
 				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
-				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
 				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
