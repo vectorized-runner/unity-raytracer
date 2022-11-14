@@ -5,13 +5,6 @@ using UnityEngine;
 
 namespace RayTracer
 {
-	[Serializable]
-	public struct Resolution
-	{
-		public int X;
-		public int Y;
-	}
-
 	public struct ImageRect
 	{
 		public float3 TopLeft;
