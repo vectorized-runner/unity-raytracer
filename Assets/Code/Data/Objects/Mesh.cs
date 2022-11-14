@@ -9,5 +9,6 @@ namespace RayTracer
 		public Triangle[] Triangles;
 		public float3[] TriangleNormals;
 		public MaterialData MaterialData;
+		public AABB AABB;
 	}
 }

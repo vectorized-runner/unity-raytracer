@@ -19,10 +19,15 @@ namespace RayTracer
 				Debug.Assert(triangleCount % 3 == 0);
 
 				var l2w = transform.localToWorldMatrix;
+				var aabb = new AABB();
+				aabb.Min = float.MaxValue;
+				aabb.Max = float.MinValue;
 
 				for (int i = 0; i < unityVerts.Length; i++)
 				{
-					unityVerts[i] = l2w.MultiplyPoint3x4(unityVerts[i]);
+					var worldPosition = l2w.MultiplyPoint3x4(unityVerts[i]);
+					aabb.Encapsulate(worldPosition);
+					unityVerts[i] = worldPosition;
 				}
 
 				var tris = new Triangle[triangleCount / 3];
@@ -43,6 +48,7 @@ namespace RayTracer
 					MaterialData = Material,
 					Triangles = tris,
 					TriangleNormals = normals,
+					AABB = aabb,
 				};
 			}
 		}
