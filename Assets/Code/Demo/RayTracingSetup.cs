@@ -369,8 +369,8 @@ namespace RayTracer
 		// TODO: Optimize crash (infinite loop) here.
 		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition)
 		{
-			var result = RaySceneIntersection(pixelRay);
-			var pixelRayHitObject = result.ObjectId;
+			var hitResult = RaySceneIntersection(pixelRay);
+			var pixelRayHitObject = hitResult.ObjectId;
 			if (pixelRayHitObject.Type == ObjectType.None)
 				return new Rgb(BackgroundColor);
 	
@@ -378,11 +378,11 @@ namespace RayTracer
 			
 			if (ToggleDrawIntersections)
 			{
-				var intersectionPoint = pixelRay.GetPoint(result.Distance);
+				var intersectionPoint = pixelRay.GetPoint(hitResult.Distance);
 				Debug.DrawLine(pixelRay.Origin, intersectionPoint, IntersectionColor);
 			}
 			
-			var surfacePoint = pixelRay.GetPoint(result.Distance);
+			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var color = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
