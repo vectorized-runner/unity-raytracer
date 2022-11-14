@@ -1,5 +1,6 @@
 using System;
 using Unity.Mathematics;
+using UnityEngine;
 using static Unity.Mathematics.math;
 
 namespace RayTracer
@@ -11,8 +12,7 @@ namespace RayTracer
 		// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
 		public static int RaySphereIntersectionAnalytical(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
 		{
-			// Debug.Assert(IsLengthEqual(ray.Direction, 1f));
-			// Debug.Assert(Math.Abs(math.dot(ray.Direction, ray.Direction) - 1f) < 0.001f);
+			Debug.Assert(IsLengthEqual(ray.Direction, 1f));
 
 			var oc = ray.Origin - sphere.Center;
 			var a = dot(ray.Direction, ray.Direction);
@@ -60,8 +60,8 @@ namespace RayTracer
 				return 1;
 			}
 
-			x0 = 0.5f * (-b + sqrt(discriminant)) / a;
-			x1 = 0.5f * (-b - sqrt(discriminant)) / a;
+			x0 = 0.5f * (-b - sqrt(discriminant)) / a;
+			x1 = 0.5f * (-b + sqrt(discriminant)) / a;
 			return 2;
 		}
 
