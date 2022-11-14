@@ -7,7 +7,11 @@ namespace RayTracer
 {
 	public static class RMath
 	{
-		// TODO: Cleanup this code when porting, it uses code taken from internet
+		// TODO-Port: Cleanup this code when porting, it uses code taken from internet
+		// TODO-Optimize: Skip Quadratic Equation part, use the most optimized math formula only
+		// TODO-Optimize: Store RadiusSquared on Spheres?
+		// TODO-Optimize: Only need to return for 1 root, not 2 roots, not used.
+		// TODO-Optimize: On 2 root case, if t0 is greater than zero, we don't have to check t1.
 		public static int RaySphereIntersection(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
 		{
 			Debug.Assert(IsLengthEqual(ray.Direction, 1f));
@@ -40,7 +44,6 @@ namespace RayTracer
 					Debug.Assert(t1 > t0);
 					var roots = 0;
 
-					// TODO: This can be optimized further (if t0 is greater than zero t1 can't be)
 					if (t0 < 0)
 					{
 						intersectA = default;
