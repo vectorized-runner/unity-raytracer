@@ -28,6 +28,8 @@ namespace RayTracer
 		public List<Sphere> Spheres;
 		public List<Color> SphereColors;
 
+		public List<PointLightData> PointLights;
+
 		public List<Triangle> Triangles;
 
 		private Color[] PixelColors = Array.Empty<Color>();
@@ -85,6 +87,18 @@ namespace RayTracer
 		{
 			UpdateTriangles();
 			FetchSpheresInScene();
+			FetchPointLights();
+		}
+
+		private void FetchPointLights()
+		{
+			PointLights.Clear();
+
+			var pointLights = FindObjectsOfType<ScenePointLight>();
+			foreach (var sceneLight in pointLights)
+			{
+				PointLights.Add(sceneLight.Light);
+			}
 		}
 
 		private void UpdateTriangles()
