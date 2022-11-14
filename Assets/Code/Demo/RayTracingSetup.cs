@@ -365,7 +365,7 @@ namespace RayTracer
 					Direction = math.normalize(pixelPosition - cameraPosition)
 				};
 				var index = GetPixelIndex(new int2(x, y), resX);
-				PixelColors[index] = ShadePixel(ray, cameraPosition, 0).Color;
+				PixelColors[index] = Shade(ray, cameraPosition, 0).Color;
 			}
 		}
 
@@ -378,6 +378,16 @@ namespace RayTracer
 				MeshIndex = -1,
 				Type = ObjectType.None
 			};
+
+			// If ray doesn't intersect with Scene AABB, there's no need to check any object
+			if (!RMath.RayAABBIntersection(ray, Scene.AABB))
+			{
+				return new IntersectionResult
+				{
+					Distance = smallestIntersectionDistance,
+					ObjectId = hitObject
+				};
+			}
 
 			var meshes = Scene.MeshData.Meshes;
 			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
@@ -443,7 +453,7 @@ namespace RayTracer
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
+		private Rgb Shade(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
 		{
 			Debug.Assert(RMath.IsNormalized(pixelRay.Direction));
 			
@@ -498,7 +508,7 @@ namespace RayTracer
 			{
 				var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 				var mirrorReflectance = material.MirrorReflectance;
-				color += new Rgb(mirrorReflectance * ShadePixel(reflectRay, cameraPosition, currentRayBounce + 1).Value);
+				color += new Rgb(mirrorReflectance * Shade(reflectRay, cameraPosition, currentRayBounce + 1).Value);
 			}
 
 			return color;
