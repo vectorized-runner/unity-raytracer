@@ -54,13 +54,15 @@ public struct ImagePlane
 	public ImageRect GetRect(CameraData cameraData)
 	{
 		var center = Center(cameraData);
+		var halfUp = cameraData.Up * HalfVerticalLength;
+		var halfRight = cameraData.Right * HalfHorizontalLength;
 
 		return new ImageRect
 		{
-			TopLeft = center + new float3(-HalfHorizontalLength, HalfVerticalLength, 0),
-			TopRight = center + new float3(HalfHorizontalLength, HalfVerticalLength, 0),
-			BottomRight = center + new float3(HalfHorizontalLength, -HalfVerticalLength, 0),
-			BottomLeft = center + new float3(-HalfHorizontalLength, -HalfVerticalLength, 0),
+			TopLeft = center -halfRight + halfUp,
+			TopRight = center + halfRight + halfUp,
+			BottomRight = center + halfRight - halfUp,
+			BottomLeft = center -halfRight - halfUp,
 		};
 	}
 }
