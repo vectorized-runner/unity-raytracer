@@ -116,6 +116,26 @@ public class RayTracingExample : MonoBehaviour
 		{
 			DrawRays(CameraData);
 		}
+	private void UpdateSpheresInScene()
+	{
+		Spheres.Clear();
+		var meshFiltersInScene = FindObjectsOfType<MeshFilter>();
+
+		foreach (var meshFilter in meshFiltersInScene)
+		{
+			if (meshFilter.sharedMesh.name.Contains("Sphere", StringComparison.OrdinalIgnoreCase))
+			{
+				// Sphere with scale 1 has 0.5f radius
+				var scale = meshFilter.gameObject.transform.localScale.x;
+				var radius = scale * 0.5f;
+				Spheres.Add(new Sphere
+				{
+					Center = meshFilter.gameObject.transform.position,
+					Radius = radius
+				});
+			}
+		}
+	}
 	}
 
 	private void DrawRays(CameraData cameraData)
