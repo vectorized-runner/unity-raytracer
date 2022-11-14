@@ -7,6 +7,6 @@ namespace RayTracer
 	public struct PointLightData
 	{
 		public float3 Position;
-		public float Intensity;
+		public float3 Intensity;
 	}
 }

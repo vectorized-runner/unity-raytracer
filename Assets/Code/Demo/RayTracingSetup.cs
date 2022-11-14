@@ -433,10 +433,9 @@ namespace RayTracer
 			return new Rgb(ambientRadiance * ambientReflectance);
 		}
 
-		private Rgb CalculateDiffuse(float receivedIrradiance, float3 diffuseReflectance, float3 surfaceNormal,
+		private Rgb CalculateDiffuse(float3 receivedIrradiance, float3 diffuseReflectance, float3 surfaceNormal,
 			float3 lightDirection)
 		{
-			Debug.Assert(receivedIrradiance >= 0f);
 			Debug.Assert(IsNormalized(surfaceNormal));
 			Debug.Assert(IsNormalized(lightDirection));
 
