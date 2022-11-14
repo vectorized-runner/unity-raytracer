@@ -7,11 +7,11 @@ namespace RayTracer
 	public struct Sphere
 	{
 		public float3 Center;
-		public float Radius;
+		public float RadiusSquared;
 
 		public override string ToString()
 		{
-			return $"Center: {Center}, Radius: {Radius}";
+			return $"Center: {Center}, RadiusSq: {RadiusSquared}";
 		}
 	}
 }

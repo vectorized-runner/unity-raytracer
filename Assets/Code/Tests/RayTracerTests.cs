@@ -17,14 +17,13 @@ namespace RayTracer
 			var sphere = new Sphere
 			{
 				Center = new float3(300, 0, 0),
-				Radius = 1f
+				RadiusSquared = 1f
 			};
 
-			var roots = RMath.RaySphereIntersection(ray, sphere, out var p0, out var p1);
-			Assert.AreEqual(2, roots);
+			var hasRoot = RMath.RaySphereIntersection(ray, sphere, out var p0);
 
+			Assert.IsTrue(hasRoot);
 			Assert.IsTrue(RMath.AreEqual(p0, new float3(299, 0, 0)), $"NotEqual: {p0}");
-			Assert.IsTrue(RMath.AreEqual(p1, new float3(301, 0, 0)), $"NotEqual: {p1}");
 		}
 	}
 }

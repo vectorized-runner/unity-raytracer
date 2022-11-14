@@ -88,7 +88,7 @@ namespace RayTracer
 			{
 				foreach (var sphere in Spheres)
 				{
-					Gizmos.DrawWireSphere(sphere.Center, sphere.Radius);
+					Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
 				}
 			}
 
@@ -146,7 +146,7 @@ namespace RayTracer
 					Spheres.Add(new Sphere
 					{
 						Center = meshFilter.gameObject.transform.position,
-						Radius = radius
+						RadiusSquared = radius * radius
 					});
 				}
 			}
@@ -179,24 +179,9 @@ namespace RayTracer
 				// Check intersection against each sphere
 				foreach (var sphere in Spheres)
 				{
-					var roots = RMath.RaySphereIntersection(ray, sphere, out var intersectA, out var intersectB);
-					switch (roots)
+					if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersection))
 					{
-						case 0:
-						{
-							break;
-						}
-						case 1:
-						{
-							Debug.DrawLine(ray.Origin, intersectA, IntersectionColor);
-							break;
-						}
-						case 2:
-						{
-							Debug.DrawLine(ray.Origin, intersectA, IntersectionColor);
-							Debug.DrawLine(ray.Origin, intersectB, IntersectionColor);
-							break;
-						}
+						Debug.DrawLine(ray.Origin, closestIntersection, IntersectionColor);
 					}
 				}
 			}
