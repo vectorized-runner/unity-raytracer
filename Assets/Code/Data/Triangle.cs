@@ -15,7 +15,7 @@ namespace RayTracer
 			get
 			{
 				var v = math.cross(Vertex2 - Vertex0, Vertex1 - Vertex0);
-				return v / math.length(v);
+				return -v / math.length(v);
 			}
 		}
 
