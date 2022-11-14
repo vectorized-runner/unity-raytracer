@@ -18,10 +18,10 @@ public struct Resolution
 
 public struct ImageRect
 {
-	public float3 TopHalfHorizontalLength;
+	public float3 TopLeft;
 	public float3 TopRight;
 	public float3 BottomRight;
-	public float3 BottomHalfHorizontalLength;
+	public float3 BottomLeft;
 }
 
 [Serializable]
@@ -49,10 +49,10 @@ public struct ImagePlane
 
 		return new ImageRect
 		{
-			TopHalfHorizontalLength = center + new float3(HalfHorizontalLength, HalfVerticalLength, 0),
-			TopRight = center + new float3(-HalfHorizontalLength, HalfVerticalLength, 0),
-			BottomRight = center + new float3(-HalfHorizontalLength, -HalfVerticalLength, 0),
-			BottomHalfHorizontalLength = center + new float3(HalfHorizontalLength, -HalfVerticalLength, 0),
+			TopLeft = center + new float3(-HalfHorizontalLength, HalfVerticalLength, 0),
+			TopRight = center + new float3(HalfHorizontalLength, HalfVerticalLength, 0),
+			BottomRight = center + new float3(HalfHorizontalLength, -HalfVerticalLength, 0),
+			BottomLeft = center + new float3(-HalfHorizontalLength, -HalfVerticalLength, 0),
 		};
 	}
 }
@@ -88,14 +88,14 @@ public class RayTracingExample : MonoBehaviour
 	{
 		DrawBounds(cameraData);
 
-		var start = ImagePlane.GetRect(cameraData).TopHalfHorizontalLength;
+		var start = ImagePlane.GetRect(cameraData).TopLeft;
 		var resolutionX = ImagePlane.Resolution.X;
 		
 		// Horizontal Lines
 		for (var x = 0; x <= resolutionX; x++)
 		{
-			var moveDown = ImagePlane.HalfVerticalLength * x / resolutionX;
-			var lineStart = start + new float3(0, moveDown, 0);
+			var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
+			var lineStart = start + new float3(0, -moveDownLength, 0);
 			var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
 			Debug.DrawLine(lineStart, lineEnd, Color.blue);
 		}
@@ -105,8 +105,8 @@ public class RayTracingExample : MonoBehaviour
 		// Vertical Lines
 		for (var y = 0; y <= resolutionY; y++)
 		{
-			var moveRight = ImagePlane.HorizontalLength * y / resolutionX;
-			var lineStart = start + new float3(moveRight, 0, 0);
+			var moveLeftLength = ImagePlane.HorizontalLength * y / resolutionX;
+			var lineStart = start + new float3(-moveLeftLength, 0, 0);
 			var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
 			Debug.DrawLine(lineStart, lineEnd, Color.yellow);
 		}
@@ -115,10 +115,10 @@ public class RayTracingExample : MonoBehaviour
 	private void DrawBounds(CameraData cameraData)
 	{
 		var rect = ImagePlane.GetRect(cameraData);
-		Debug.DrawLine(rect.TopHalfHorizontalLength, rect.TopRight, Color.red);
-		Debug.DrawLine(rect.TopHalfHorizontalLength, rect.BottomHalfHorizontalLength, Color.red);
-		Debug.DrawLine(rect.BottomHalfHorizontalLength, rect.BottomRight, Color.red);
+		Debug.DrawLine(rect.TopLeft, rect.TopRight, Color.red);
+		Debug.DrawLine(rect.TopLeft, rect.BottomLeft, Color.red);
 		Debug.DrawLine(rect.TopRight, rect.BottomRight, Color.red);
+		Debug.DrawLine(rect.BottomLeft, rect.BottomRight, Color.red);
 	}
 
 	void DrawIntersections()
