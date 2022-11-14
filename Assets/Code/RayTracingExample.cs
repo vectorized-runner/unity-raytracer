@@ -72,6 +72,7 @@ namespace RayTracer
 		public Color ImagePlaneColor = Color.red;
 		public Color RayColor = Color.yellow;
 		public Color IntersectionColor = Color.cyan;
+		public Color TriangleColor = Color.green;
 
 		public List<Sphere> Spheres;
 		public List<Triangle> Triangles;
@@ -121,8 +122,12 @@ namespace RayTracer
 				Triangles.Clear();
 				var center = CameraData.Position + new float3(0f, 0f, 15f);
 				Triangles = CreateTriangles(center);
+				
+				Debug.Log("Created Triangles!");
 			}
 
+			DrawTriangles();
+			
 			if (ToggleDrawImagePlane)
 			{
 				DrawImagePlane(CameraData);
@@ -140,11 +145,21 @@ namespace RayTracer
 			}
 		}
 
+		private void DrawTriangles()
+		{
+			foreach (var triangle in Triangles)
+			{
+				Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, Color.green);
+				Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, Color.green);
+				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, Color.green);
+			}
+		}
+		
 		private Triangle CreateRandomTriangle(float3 center, float distanceMin, float distanceMax)
 		{
 			var r0 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
-			var r1 = Random.insideUnitCircle;
-			var r2 = Random.insideUnitCircle;
+			var r1 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
+			var r2 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
 			var p0 = center + new float3(r0.x, r0.y, 0f);
 			var p1 = center + new float3(r1.x, r1.y, 0f);
 			var p2 = center + new float3(r2.x, r2.y, 0f);
