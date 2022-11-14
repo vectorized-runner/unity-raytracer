@@ -6,11 +6,11 @@ namespace RayTracer
 {
 	public static class RMath
 	{
+		private const float Epsilon = 0.00001f;
+
 		// TODO-Port: Code taken from the internet, you know what to do.
 		public static bool RayTriangleIntersection(Ray ray, Triangle triangle, out float3 intersection)
 		{
-			const float epsilon = 0.0000001f;
-
 			var vertex0 = triangle.Vertices.x;
 			var vertex1 = triangle.Vertices.y;
 			var vertex2 = triangle.Vertices.z;
@@ -19,7 +19,7 @@ namespace RayTracer
 			var h = cross(ray.Direction, edge2);
 			var a = dot(edge1, h);
 
-			if (a > -epsilon && a < epsilon)
+			if (a > -Epsilon && a < Epsilon)
 			{
 				intersection = default;
 				return false; // This ray is parallel to this triangle.
@@ -28,7 +28,7 @@ namespace RayTracer
 			var f = 1.0f / a;
 			var s = ray.Origin - vertex0;
 			var u = f * dot(s, h);
-			if (u < 0.0 || u > 1.0)
+			if (u < 0.0f || u > 1.0f)
 			{
 				intersection = default;
 				return false;
@@ -36,7 +36,7 @@ namespace RayTracer
 
 			var q = cross(s, edge1);
 			var v = f * dot(ray.Direction, q);
-			if (v < 0.0 || u + v > 1.0)
+			if (v < 0.0f || u + v > 1.0f)
 			{
 				intersection = default;
 				return false;
@@ -44,7 +44,7 @@ namespace RayTracer
 
 			// At this stage we can compute t to find out where the intersection point is on the line.
 			var t = f * dot(edge2, q);
-			if (t > epsilon) // ray intersection
+			if (t > Epsilon) // ray intersection
 			{
 				intersection = ray.GetPoint(t);
 				return true;
@@ -93,12 +93,12 @@ namespace RayTracer
 
 		public static bool AreEqual(float3 a, float3 b)
 		{
-			return all(abs(a - b) < 0.0001f);
+			return all(abs(a - b) < Epsilon);
 		}
 
 		public static bool IsLengthEqual(float3 v, float length)
 		{
-			return abs(lengthsq(v) - length * length) < 0.0001f;
+			return abs(lengthsq(v) - length * length) < Epsilon;
 		}
 	}
 }
