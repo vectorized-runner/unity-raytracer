@@ -96,19 +96,16 @@ namespace RayTracer
 			if (!Application.isPlaying)
 				return;
 
-			if (ToggleDrawIntersections)
+			foreach (var sphere in Spheres)
 			{
-				foreach (var sphere in Spheres)
-				{
-					Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
-				}
+				Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
 			}
 
 			if (ToggleDrawPixelColors)
 			{
 				var origColor = Gizmos.color;
 				Gizmos.color = Color.black;
-				
+
 				var resX = ImagePlane.Resolution.X;
 				var resY = ImagePlane.Resolution.Y;
 				var topLeft = ImagePlane.GetRect(CameraData).TopLeft;
@@ -118,7 +115,7 @@ namespace RayTracer
 				var verticalLength = ImagePlane.VerticalLength;
 
 				var size = new float3(horizontalLength / resX, verticalLength / resY, 0.01f);
-				
+
 				for (var pixelIndex = 0; pixelIndex < PixelColors.Length; pixelIndex++)
 				{
 					var pixelCoordinates = GetPixelCoordinates(pixelIndex, resX);
@@ -128,17 +125,8 @@ namespace RayTracer
 					Gizmos.color = PixelColors[pixelIndex];
 					Gizmos.DrawCube(pixelPosition, size);
 				}
-				
-				Gizmos.color = origColor;
-			}
 
-			if (ToggleDrawImagePlane)
-			{
-				var rect = ImagePlane.GetRect(CameraData);
-				Gizmos.DrawSphere(rect.TopLeft, 1f);
-				Gizmos.DrawSphere(rect.TopRight, 1f);
-				Gizmos.DrawSphere(rect.BottomLeft, 1f);
-				Gizmos.DrawSphere(rect.BottomRight, 1f);
+				Gizmos.color = origColor;
 			}
 		}
 
@@ -150,7 +138,7 @@ namespace RayTracer
 		void Update()
 		{
 			var cam = Camera.main;
-			
+
 			CameraData = new CameraData
 			{
 				Position = cam.transform.position,
@@ -158,7 +146,7 @@ namespace RayTracer
 				Right = math.normalize(cam.transform.right),
 				Up = math.normalize(cam.transform.up)
 			};
-			
+
 			ClearScreen();
 
 			if (Input.GetKeyDown(KeyCode.Space))
@@ -166,13 +154,13 @@ namespace RayTracer
 				Triangles.Clear();
 				var center = CameraData.Position + new float3(0f, 0f, 15f);
 				Triangles = CreateTriangles(center);
-				
+
 				Debug.Log("Created Triangles!");
 			}
 
 			DrawTriangles();
 			UpdateSpheresInScene();
-			
+
 			if (ToggleDrawImagePlane)
 			{
 				DrawImagePlane(CameraData);
@@ -183,10 +171,7 @@ namespace RayTracer
 				DrawRays(CameraData);
 			}
 
-			if (ToggleDrawIntersections)
-			{
-				DrawIntersections(CameraData);
-			}
+			HandleIntersections(CameraData);
 		}
 
 		private void ClearScreen()
@@ -196,7 +181,7 @@ namespace RayTracer
 			{
 				Array.Resize(ref PixelColors, requiredPixelCount);
 			}
-			
+
 			Array.Clear(PixelColors, 0, requiredPixelCount);
 		}
 
@@ -209,7 +194,7 @@ namespace RayTracer
 				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, TriangleColor);
 			}
 		}
-		
+
 		private Triangle CreateRandomTriangle(float3 center, float distanceMin, float distanceMax)
 		{
 			var r0 = Random.insideUnitCircle * Random.Range(distanceMin, distanceMax);
@@ -266,7 +251,7 @@ namespace RayTracer
 		// 2. Invert Loop and Run vs. Spheres first, then Run vs. other shapes
 		// Another idea: Run Sphere vs. Pixels first, Then Run Triangle vs. Pixels etc... (homogenous)
 		// TODO-Optimize: We can collect all intersection distances, and find the smallest of them in a separate loop?
-		private void DrawIntersections(CameraData cameraData)
+		private void HandleIntersections(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
 			var resY = ImagePlane.Resolution.Y;
@@ -296,7 +281,7 @@ namespace RayTracer
 				{
 					var smallestIntersectionDistance = float.MaxValue;
 					var foundIntersection = false;
-					
+
 					foreach (var sphere in Spheres)
 					{
 						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
@@ -308,6 +293,7 @@ namespace RayTracer
 							}
 						}
 					}
+
 					foreach (var triangle in Triangles)
 					{
 						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
@@ -320,13 +306,17 @@ namespace RayTracer
 						}
 					}
 
-					
+
 					var index = GetPixelIndex(new int2(x, y), resX);
 					if (foundIntersection)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
-						Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
 						PixelColors[index] = CalculatePixelColor();
+
+						if (ToggleDrawIntersections)
+						{
+							Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
+						}
 					}
 					else
 					{
@@ -340,7 +330,7 @@ namespace RayTracer
 		{
 			return Color.white;
 		}
-		
+
 		private void DrawRays(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
