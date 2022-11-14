@@ -5,6 +5,16 @@ using UnityEngine;
 
 namespace RayTracer
 {
+	public struct Scene
+	{
+		public TriangleData TriangleData;
+		public MeshData MeshData;
+		public SphereData SphereData;
+		
+		public List<PointLightData> PointLights;
+		public AmbientLightData AmbientLight;
+	}
+
 	[Serializable]
 	public struct TriangleData
 	{
@@ -65,13 +75,7 @@ namespace RayTracer
 		public Color TriangleColor = Color.blue;
 		public Color SurfaceNormalColor = Color.green;
 
-		// Lights
-		public List<PointLightData> PointLights;
-		public AmbientLightData AmbientLight;
-
-		public SphereData SphereData;
-		public TriangleData TriangleData;
-		public MeshData MeshData;
+		public Scene Scene;
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
 
@@ -79,23 +83,25 @@ namespace RayTracer
 
 		private void Start()
 		{
-			SphereData = new SphereData
+			Scene.SphereData = new SphereData
 			{
 				Materials = new List<MaterialData>(),
 				Spheres = new List<Sphere>()
 			};
 
-			TriangleData = new TriangleData
+			Scene.TriangleData = new TriangleData
 			{
 				Normals = new List<float3>(),
 				Triangles = new List<Triangle>(),
 				Materials = new List<MaterialData>(),
 			};
 
-			MeshData = new MeshData
+			Scene.MeshData = new MeshData
 			{
 				Meshes = new List<Mesh>(),
 			};
+
+			Scene.PointLights = new List<PointLightData>();
 		}
 
 		private void OnDrawGizmos()
@@ -105,14 +111,14 @@ namespace RayTracer
 
 			var color = Gizmos.color;
 			Gizmos.color = Color.yellow;
-			foreach (var pointLight in PointLights)
+			foreach (var pointLight in Scene.PointLights)
 			{
 				Gizmos.DrawWireSphere(pointLight.Position, 1f);
 			}
 
 			Gizmos.color = color;
 
-			foreach (var sphere in SphereData.Spheres)
+			foreach (var sphere in Scene.SphereData.Spheres)
 			{
 				Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
 			}
@@ -162,7 +168,7 @@ namespace RayTracer
 
 		private void FetchAmbientLights()
 		{
-			AmbientLight = default;
+			Scene.AmbientLight = default;
 			var ambientLights = FindObjectsOfType<SceneAmbientLight>();
 
 			switch (ambientLights.Length)
@@ -173,31 +179,31 @@ namespace RayTracer
 				case 0:
 					return;
 				default:
-					AmbientLight = ambientLights[0].AmbientLight;
+					Scene.AmbientLight = ambientLights[0].AmbientLight;
 					break;
 			}
 		}
 
 		private void FetchPointLights()
 		{
-			PointLights.Clear();
+			Scene.PointLights.Clear();
 
 			var pointLights = FindObjectsOfType<ScenePointLight>();
 			foreach (var sceneLight in pointLights)
 			{
-				PointLights.Add(sceneLight.Light);
+				Scene.PointLights.Add(sceneLight.Light);
 			}
 		}
 
 		private void FetchTriangles()
 		{
-			TriangleData.Clear();
+			Scene.TriangleData.Clear();
 
 			foreach (var triangle in FindObjectsOfType<SceneTriangle>())
 			{
-				TriangleData.Triangles.Add(triangle.Triangle);
-				TriangleData.Normals.Add(triangle.Triangle.Normal);
-				TriangleData.Materials.Add(triangle.Material);
+				Scene.TriangleData.Triangles.Add(triangle.Triangle);
+				Scene.TriangleData.Normals.Add(triangle.Triangle.Normal);
+				Scene.TriangleData.Materials.Add(triangle.Material);
 			}
 		}
 
@@ -233,7 +239,7 @@ namespace RayTracer
 
 		private void DrawMeshTriangles()
 		{
-			foreach (var mesh in MeshData.Meshes)
+			foreach (var mesh in Scene.MeshData.Meshes)
 			{
 				foreach (var triangle in mesh.Triangles)
 				{
@@ -255,7 +261,7 @@ namespace RayTracer
 
 		private void DrawTriangles()
 		{
-			foreach (var triangle in TriangleData.Triangles)
+			foreach (var triangle in Scene.TriangleData.Triangles)
 			{
 				DrawTriangle(triangle);
 			}
@@ -280,23 +286,23 @@ namespace RayTracer
 
 		private void FetchMeshes()
 		{
-			MeshData.Clear();
+			Scene.MeshData.Clear();
 
 			foreach (var mesh in FindObjectsOfType<SceneMesh>())
 			{
-				MeshData.Meshes.Add(mesh.Mesh);
+				Scene.MeshData.Meshes.Add(mesh.Mesh);
 			}
 		}
 
 		private void FetchSpheres()
 		{
-			SphereData.Clear();
+			Scene.SphereData.Clear();
 			var spheres = FindObjectsOfType<SceneSphere>();
 
 			foreach (var sphere in spheres)
 			{
-				SphereData.Spheres.Add(sphere.Sphere);
-				SphereData.Materials.Add(sphere.Material);
+				Scene.SphereData.Spheres.Add(sphere.Sphere);
+				Scene.SphereData.Materials.Add(sphere.Material);
 			}
 		}
 
@@ -344,7 +350,7 @@ namespace RayTracer
 				Type = ObjectType.None
 			};
 
-			var meshes = MeshData.Meshes;
+			var meshes = Scene.MeshData.Meshes;
 			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
 			{
 				var mesh = meshes[meshIndex];
@@ -368,7 +374,7 @@ namespace RayTracer
 				}
 			}
 
-			var spheres = SphereData.Spheres;
+			var spheres = Scene.SphereData.Spheres;
 			for (var sphereIndex = 0; sphereIndex < spheres.Count; sphereIndex++)
 			{
 				var sphere = spheres[sphereIndex];
@@ -383,7 +389,7 @@ namespace RayTracer
 				}
 			}
 
-			var triangles = TriangleData.Triangles;
+			var triangles = Scene.TriangleData.Triangles;
 			for (var triIndex = 0; triIndex < triangles.Count; triIndex++)
 			{
 				var triangle = triangles[triIndex];
@@ -427,10 +433,10 @@ namespace RayTracer
 			
 			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
-			var color = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
+			var color = CalculateAmbient(material.AmbientReflectance, Scene.AmbientLight.Radiance);
 			var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 
-			foreach (var pointLight in PointLights)
+			foreach (var pointLight in Scene.PointLights)
 			{
 				var lightPosition = pointLight.Position;
 				var lightDirection = math.normalize(lightPosition - surfacePoint);
@@ -510,9 +516,9 @@ namespace RayTracer
 				case ObjectType.Sphere:
 					return GetSphereNormal(surfacePoint, objectId.Index);
 				case ObjectType.Triangle:
-					return TriangleData.Normals[objectId.Index];
+					return Scene.TriangleData.Normals[objectId.Index];
 				case ObjectType.MeshTriangle:
-					return MeshData.Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
+					return Scene.MeshData.Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
@@ -524,11 +530,11 @@ namespace RayTracer
 			switch (id.Type)
 			{
 				case ObjectType.Sphere:
-					return SphereData.Materials[id.Index].MirrorReflectance;
+					return Scene.SphereData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.Triangle:
-					return TriangleData.Materials[id.Index].MirrorReflectance;
+					return Scene.TriangleData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.MeshTriangle:
-					return MeshData.Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
+					return Scene.MeshData.Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -537,7 +543,7 @@ namespace RayTracer
 
 		private float3 GetSphereNormal(float3 surfacePoint, int index)
 		{
-			var sphere = SphereData.Spheres[index];
+			var sphere = Scene.SphereData.Spheres[index];
 			var surfaceNormal = math.normalize(surfacePoint - sphere.Center);
 			return surfaceNormal;
 		}
@@ -550,19 +556,19 @@ namespace RayTracer
 				case ObjectType.Sphere:
 				{
 					var surfaceNormal = GetSphereNormal(surfacePoint, id.Index);
-					var material = SphereData.Materials[id.Index];
+					var material = Scene.SphereData.Materials[id.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.Triangle:
 				{
-					var surfaceNormal = TriangleData.Normals[id.Index];
-					var material = TriangleData.Materials[id.Index];
+					var surfaceNormal = Scene.TriangleData.Normals[id.Index];
+					var material = Scene.TriangleData.Materials[id.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.MeshTriangle:
 				{
-					var surfaceNormal = MeshData.Meshes[id.MeshIndex].TriangleNormals[id.Index];
-					var material = MeshData.Meshes[id.MeshIndex].MaterialData;
+					var surfaceNormal = Scene.MeshData.Meshes[id.MeshIndex].TriangleNormals[id.Index];
+					var material = Scene.MeshData.Meshes[id.MeshIndex].MaterialData;
 					return (surfaceNormal, material);
 				}
 				case ObjectType.None:
