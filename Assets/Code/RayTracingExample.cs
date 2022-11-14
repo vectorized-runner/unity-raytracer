@@ -84,7 +84,7 @@ namespace RayTracer
 		public List<Sphere> Spheres;
 		public List<Triangle> Triangles;
 
-		private Color[] PixelColors = new Color[0];
+		private Color[] PixelColors = Array.Empty<Color>();
 
 		private void Start()
 		{
@@ -108,7 +108,6 @@ namespace RayTracer
 			{
 				var origColor = Gizmos.color;
 				Gizmos.color = Color.black;
-				Gizmos.DrawCube(float3.zero, new float3(10f, 10f, 0.1f));
 				
 				var resX = ImagePlane.Resolution.X;
 				var resY = ImagePlane.Resolution.Y;
