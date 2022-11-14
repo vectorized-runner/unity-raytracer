@@ -26,8 +26,8 @@ namespace RayTracer
 
 		// Separate hot and cold data
 		public List<Sphere> Spheres;
-		public List<Color> SphereColors; 
-		
+		public List<Color> SphereColors;
+
 		public List<Triangle> Triangles;
 
 		private Color[] PixelColors = Array.Empty<Color>();
@@ -175,7 +175,7 @@ namespace RayTracer
 		{
 			Spheres.Clear();
 			SphereColors.Clear();
-			
+
 			var meshFiltersInScene = FindObjectsOfType<MeshFilter>();
 
 			foreach (var meshFilter in meshFiltersInScene)
@@ -218,51 +218,54 @@ namespace RayTracer
 			for (int y = 0; y < resY; y++)
 			for (int x = 0; x < resX; x++)
 			{
-				// Get ray
 				var rightMove = (x + 0.5f) * horizontalLength / resX;
 				var downMove = (y + 0.5f) * verticalLength / resY;
-				var pointOnPlane = topLeft + rightMove * right - up * downMove;
+				var pixelPosition = topLeft + rightMove * right - up * downMove;
 				var ray = new Ray
 				{
 					Origin = cameraPosition,
-					Direction = math.normalize(pointOnPlane - cameraPosition)
+					Direction = math.normalize(pixelPosition - cameraPosition)
 				};
 
 				// Check intersection against each object
 				{
 					var smallestIntersectionDistance = float.MaxValue;
-					var foundIntersection = false;
+					var hitObject = ObjectType.None;
+					var hitObjectIndex = -1;
 
-					foreach (var sphere in Spheres)
+					for (var sphereIndex = 0; sphereIndex < Spheres.Count; sphereIndex++)
 					{
+						var sphere = Spheres[sphereIndex];
 						if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
 						{
 							if (smallestIntersectionDistance > closestIntersectionDistance)
 							{
 								smallestIntersectionDistance = closestIntersectionDistance;
-								foundIntersection = true;
+								hitObject = ObjectType.Sphere;
+								hitObjectIndex = sphereIndex;
 							}
 						}
 					}
 
-					foreach (var triangle in Triangles)
+					for (var triIndex = 0; triIndex < Triangles.Count; triIndex++)
 					{
+						var triangle = Triangles[triIndex];
 						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 						{
 							if (smallestIntersectionDistance > intersectionDistance)
 							{
 								smallestIntersectionDistance = intersectionDistance;
-								foundIntersection = true;
+								hitObject = ObjectType.Triangle;
+								hitObjectIndex = triIndex;
 							}
 						}
 					}
 
-
 					var index = GetPixelIndex(new int2(x, y), resX);
-					if (foundIntersection)
+					if (hitObject != ObjectType.None)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
-						PixelColors[index] = CalculatePixelColor();
+						PixelColors[index] = CalculatePixelColor(hitObject, hitObjectIndex);
 
 						if (ToggleDrawIntersections)
 						{
@@ -277,7 +280,7 @@ namespace RayTracer
 			}
 		}
 
-		private Color CalculatePixelColor()
+		private Color CalculatePixelColor(ObjectType objectType, int objectIndex)
 		{
 			return Color.white;
 		}
