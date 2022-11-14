@@ -272,18 +272,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ImagePlane:
     Resolution:
-      X: 300
-      Y: 300
+      X: 50
+      Y: 50
     DistanceToCamera: 10
     HalfHorizontalLength: 20
     HalfVerticalLength: 10
   BackgroundColor: {r: 0, g: 0, b: 0, a: 1}
-  ReflectionBounces: 3
+  MaxReflectionBounces: 5
   ToggleDrawImagePlane: 0
   ToggleDrawPixelRays: 0
   ToggleDrawIntersections: 1
   ToggleDrawPixelColors: 1
-  ToggleDrawSurfaceNormals: 1
+  ToggleDrawSurfaceNormals: 0
   ImagePlaneColor: {r: 1, g: 0, b: 0, a: 1}
   RayColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   IntersectionColor: {r: 0, g: 1, b: 1, a: 1}
@@ -500,7 +500,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6824821233459684901, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6824821233459684903, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_RootOrder
@@ -508,7 +508,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6824821233459684903, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 17.1
       objectReference: {fileID: 0}
     - target: {fileID: 6824821233459684903, guid: 8250a105bc44c408caa8fd83927c46d7, type: 3}
       propertyPath: m_LocalPosition.y
