@@ -20,7 +20,7 @@ namespace RayTracer
 				Radius = 1f
 			};
 
-			var roots = RMath.RaySphereIntersectionAnalytical(ray, sphere, out var p0, out var p1);
+			var roots = RMath.RaySphereIntersection(ray, sphere, out var p0, out var p1);
 			Assert.AreEqual(2, roots);
 
 			Assert.IsTrue(RMath.AreEqual(p0, new float3(299, 0, 0)), $"NotEqual: {p0}");

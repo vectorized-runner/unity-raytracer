@@ -7,10 +7,8 @@ namespace RayTracer
 {
 	public static class RMath
 	{
-		// This algorithm currently doesn't work! It's on hold!
-		// Derived from:
-		// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-		public static int RaySphereIntersectionAnalytical(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
+		// TODO: Cleanup this code when porting, it uses code taken from internet
+		public static int RaySphereIntersection(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
 		{
 			Debug.Assert(IsLengthEqual(ray.Direction, 1f));
 
@@ -19,24 +17,51 @@ namespace RayTracer
 			var b = 2 * dot(ray.Direction, oc);
 			var c = dot(oc, oc) - sphere.Radius * sphere.Radius;
 
-			switch (SolveQuadraticEquation(a, b, c, out var x0, out var x1))
+			switch (SolveQuadraticEquation(a, b, c, out var t0, out var t1))
 			{
 				case 0:
 				{
-					intersectA = default;
-					intersectB = default;
+					intersectA = intersectB = default;
 					return 0;
 				}
 				case 1:
 				{
-					intersectA = intersectB = ray.GetPoint(x0);
+					if (t0 < 0)
+					{
+						intersectA = intersectB = default;
+						return 0;
+					}
+
+					intersectA = intersectB = ray.GetPoint(t0);
 					return 1;
 				}
 				case 2:
 				{
-					intersectA = ray.GetPoint(x0);
-					intersectB = ray.GetPoint(x1);
-					return 2;
+					Debug.Assert(t1 > t0);
+					var roots = 0;
+
+					// TODO: This can be optimized further (if t0 is greater than zero t1 can't be)
+					if (t0 < 0)
+					{
+						intersectA = default;
+					}
+					else
+					{
+						intersectA = ray.GetPoint(t0);
+						roots++;
+					}
+
+					if (t1 < 0)
+					{
+						intersectB = default;
+					}
+					else
+					{
+						intersectB = ray.GetPoint(t1);
+						roots++;
+					}
+
+					return roots;
 				}
 				default:
 					throw new ArgumentOutOfRangeException();
