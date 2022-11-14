@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -11,8 +10,6 @@ namespace RayTracer
 	{
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
-
-		private CameraData CameraData;
 
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawPixelRays = true;
@@ -27,16 +24,21 @@ namespace RayTracer
 		public Color TriangleColor = Color.blue;
 		public Color SurfaceNormalColor = Color.green;
 
+		// Lights
+		public List<PointLightData> PointLights;
+		public List<AmbientLightData> AmbientLights;
+		
+		// Spheres
 		// Separate hot and cold data
 		public List<Sphere> Spheres;
 		public List<MaterialData> SphereMaterials;
 
-		public List<PointLightData> PointLights;
-
+		// Triangles
 		public List<Triangle> Triangles;
 		public List<MaterialData> TriangleMaterials;
 		public List<float3> TriangleNormals;
-
+		
+		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
 
 		private void Start()
@@ -55,6 +57,7 @@ namespace RayTracer
 			{
 				Gizmos.DrawWireSphere(pointLight.Position, 1f);
 			}
+
 			Gizmos.color = color;
 
 			foreach (var sphere in Spheres)
@@ -101,6 +104,17 @@ namespace RayTracer
 			FetchTriangles();
 			FetchSpheres();
 			FetchPointLights();
+			FetchAmbientLights();
+		}
+
+		private void FetchAmbientLights()
+		{
+			AmbientLights.Clear();
+
+			foreach (var ambient in FindObjectsOfType<SceneAmbientLight>())
+			{
+				AmbientLights.Add(ambient.AmbientLight);
+			}
 		}
 
 		private void FetchPointLights()
