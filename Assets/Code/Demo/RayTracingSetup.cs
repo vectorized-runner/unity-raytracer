@@ -298,20 +298,20 @@ namespace RayTracer
 		private Rgb Shade(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
 		{
 			Debug.Assert(RMath.IsNormalized(pixelRay.Direction));
-			
+
 			var hitResult = Scene.IntersectRay(pixelRay);
 			var pixelRayHitObject = hitResult.ObjectId;
 			if (pixelRayHitObject.Type == ObjectType.None)
 				return new Rgb(BackgroundColor);
-	
+
 			Debug.Assert(pixelRayHitObject.Type != ObjectType.None);
-			
+
 			if (ToggleDrawIntersections)
 			{
 				var intersectionPoint = pixelRay.GetPoint(hitResult.Distance);
 				Debug.DrawLine(pixelRay.Origin, intersectionPoint, IntersectionColor);
 			}
-			
+
 			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var color = CalculateAmbient(material.AmbientReflectance, Scene.AmbientLight.Radiance);
@@ -325,7 +325,7 @@ namespace RayTracer
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
 				var shadowRayHitResult = Scene.IntersectRay(shadowRay);
 				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
-				
+
 				// TODO-Optimize: We can remove this branch, if ray-scene intersection returns infinite distance by default
 				if (shadowRayHitResult.ObjectId.Type != ObjectType.None)
 				{
@@ -341,11 +341,13 @@ namespace RayTracer
 				Debug.Assert(shadowRayHitResult.ObjectId != pixelRayHitObject);
 
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
+					lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
+					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				color += diffuseRgb + specularRgb;
 			}
-			
+
 			if (material.IsMirror && currentRayBounce < MaxReflectionBounces)
 			{
 				var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
@@ -469,13 +471,6 @@ namespace RayTracer
 
 		void DrawImagePlane(CameraData cameraData)
 		{
-			// This is no longer required, as the lines already draw the bounds
-			// DrawBounds(cameraData);
-			DrawLines(cameraData);
-		}
-
-		private void DrawLines(CameraData cameraData)
-		{
 			var start = ImagePlane.GetRect(cameraData).TopLeft;
 			var resolutionX = ImagePlane.Resolution.X;
 			var up = cameraData.Up;
@@ -499,16 +494,6 @@ namespace RayTracer
 				var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
 				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
-		}
-
-		private void DrawBounds(CameraData cameraData)
-		{
-			var rect = ImagePlane.GetRect(cameraData);
-			var color = ImagePlaneColor;
-			Debug.DrawLine(rect.TopLeft, rect.TopRight, color);
-			Debug.DrawLine(rect.TopLeft, rect.BottomLeft, color);
-			Debug.DrawLine(rect.TopRight, rect.BottomRight, color);
-			Debug.DrawLine(rect.BottomLeft, rect.BottomRight, color);
 		}
 	}
 }
