@@ -26,7 +26,7 @@ namespace RayTracer
 
 		// Separate hot and cold data
 		public List<Sphere> Spheres;
-		public List<Color> SphereColors;
+		public List<MaterialData> SphereMaterials;
 
 		public List<PointLightData> PointLights;
 
@@ -86,7 +86,7 @@ namespace RayTracer
 		private void FetchSceneComponents()
 		{
 			UpdateTriangles();
-			FetchSpheresInScene();
+			FetchSpheres();
 			FetchPointLights();
 		}
 
@@ -193,29 +193,16 @@ namespace RayTracer
 			return pixelPosition.x + pixelPosition.y * resolutionX;
 		}
 
-		private void FetchSpheresInScene()
+		private void FetchSpheres()
 		{
 			Spheres.Clear();
-			SphereColors.Clear();
+			SphereMaterials.Clear();
 
-			var meshFiltersInScene = FindObjectsOfType<MeshFilter>();
-
-			foreach (var meshFilter in meshFiltersInScene)
+			var spheres = FindObjectsOfType<SceneSphere>();
+			foreach (var sphere in spheres)
 			{
-				if (meshFilter.sharedMesh.name.Contains("Sphere", StringComparison.OrdinalIgnoreCase))
-				{
-					// Sphere with scale 1 has 0.5f radius
-					var scale = meshFilter.gameObject.transform.localScale.x;
-					var radius = scale * 0.5f;
-					Spheres.Add(new Sphere
-					{
-						Center = meshFilter.gameObject.transform.position,
-						RadiusSquared = radius * radius
-					});
-
-					var color = meshFilter.GetComponent<MeshRenderer>().sharedMaterial.color;
-					SphereColors.Add(color);
-				}
+				Spheres.Add(sphere.Sphere);
+				SphereMaterials.Add(sphere.Material);
 			}
 		}
 
