@@ -292,87 +292,6 @@ namespace RayTracer
 			}
 		}
 
-		public IntersectionResult RaySceneIntersection(Ray ray)
-		{
-			var smallestIntersectionDistance = float.MaxValue;
-			var hitObject = new ObjectId
-			{
-				Index = -1,
-				MeshIndex = -1,
-				Type = ObjectType.None
-			};
-
-			// If ray doesn't intersect with Scene AABB, there's no need to check any object
-			if (!RMath.RayAABBIntersection(ray, Scene.AABB))
-			{
-				return new IntersectionResult
-				{
-					Distance = smallestIntersectionDistance,
-					ObjectId = hitObject
-				};
-			}
-
-			var meshes = Scene.MeshData.Meshes;
-			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
-			{
-				var mesh = meshes[meshIndex];
-				if (RMath.RayAABBIntersection(ray, mesh.AABB))
-				{
-					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
-					{
-						var triangle = mesh.Triangles[triIndex];
-
-						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
-						{
-							if (smallestIntersectionDistance > intersectionDistance)
-							{
-								smallestIntersectionDistance = intersectionDistance;
-								hitObject.Type = ObjectType.MeshTriangle;
-								hitObject.Index = triIndex;
-								hitObject.MeshIndex = meshIndex;
-							}
-						}
-					}
-				}
-			}
-
-			var spheres = Scene.SphereData.Spheres;
-			for (var sphereIndex = 0; sphereIndex < spheres.Count; sphereIndex++)
-			{
-				var sphere = spheres[sphereIndex];
-				if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
-				{
-					if (smallestIntersectionDistance > closestIntersectionDistance)
-					{
-						smallestIntersectionDistance = closestIntersectionDistance;
-						hitObject.Type = ObjectType.Sphere;
-						hitObject.Index = sphereIndex;
-					}
-				}
-			}
-
-			var triangles = Scene.TriangleData.Triangles;
-			for (var triIndex = 0; triIndex < triangles.Count; triIndex++)
-			{
-				var triangle = triangles[triIndex];
-				if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
-				{
-					if (smallestIntersectionDistance > intersectionDistance)
-					{
-						smallestIntersectionDistance = intersectionDistance;
-						hitObject.Type = ObjectType.Triangle;
-						hitObject.Index = triIndex;
-					}
-				}
-			}
-
-			return new IntersectionResult
-			{
-				Distance = smallestIntersectionDistance,
-				ObjectId = hitObject,
-			};
-		}
-
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
@@ -380,7 +299,7 @@ namespace RayTracer
 		{
 			Debug.Assert(RMath.IsNormalized(pixelRay.Direction));
 			
-			var hitResult = RaySceneIntersection(pixelRay);
+			var hitResult = Scene.IntersectRay(pixelRay);
 			var pixelRayHitObject = hitResult.ObjectId;
 			if (pixelRayHitObject.Type == ObjectType.None)
 				return new Rgb(BackgroundColor);
@@ -404,7 +323,7 @@ namespace RayTracer
 				var lightDirection = math.normalize(lightPosition - surfacePoint);
 				var shadowRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
-				var shadowRayHitResult = RaySceneIntersection(shadowRay);
+				var shadowRayHitResult = Scene.IntersectRay(shadowRay);
 				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
 				
 				// TODO-Optimize: We can remove this branch, if ray-scene intersection returns infinite distance by default

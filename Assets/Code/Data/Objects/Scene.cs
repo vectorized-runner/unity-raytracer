@@ -7,7 +7,7 @@ namespace RayTracer
 		public TriangleData TriangleData;
 		public MeshData MeshData;
 		public SphereData SphereData;
-		
+
 		public List<PointLightData> PointLights;
 		public AmbientLightData AmbientLight;
 
@@ -37,6 +37,87 @@ namespace RayTracer
 			}
 
 			AABB = aabb;
+		}
+
+		public IntersectionResult IntersectRay(Ray ray)
+		{
+			var smallestIntersectionDistance = float.MaxValue;
+			var hitObject = new ObjectId
+			{
+				Index = -1,
+				MeshIndex = -1,
+				Type = ObjectType.None
+			};
+
+			// If ray doesn't intersect with Scene AABB, there's no need to check any object
+			if (!RMath.RayAABBIntersection(ray, AABB))
+			{
+				return new IntersectionResult
+				{
+					Distance = smallestIntersectionDistance,
+					ObjectId = hitObject
+				};
+			}
+
+			var meshes = MeshData.Meshes;
+			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
+			{
+				var mesh = meshes[meshIndex];
+				if (RMath.RayAABBIntersection(ray, mesh.AABB))
+				{
+					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
+					{
+						var triangle = mesh.Triangles[triIndex];
+
+						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+						{
+							if (smallestIntersectionDistance > intersectionDistance)
+							{
+								smallestIntersectionDistance = intersectionDistance;
+								hitObject.Type = ObjectType.MeshTriangle;
+								hitObject.Index = triIndex;
+								hitObject.MeshIndex = meshIndex;
+							}
+						}
+					}
+				}
+			}
+
+			var spheres = SphereData.Spheres;
+			for (var sphereIndex = 0; sphereIndex < spheres.Count; sphereIndex++)
+			{
+				var sphere = spheres[sphereIndex];
+				if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
+				{
+					if (smallestIntersectionDistance > closestIntersectionDistance)
+					{
+						smallestIntersectionDistance = closestIntersectionDistance;
+						hitObject.Type = ObjectType.Sphere;
+						hitObject.Index = sphereIndex;
+					}
+				}
+			}
+
+			var triangles = TriangleData.Triangles;
+			for (var triIndex = 0; triIndex < triangles.Count; triIndex++)
+			{
+				var triangle = triangles[triIndex];
+				if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+				{
+					if (smallestIntersectionDistance > intersectionDistance)
+					{
+						smallestIntersectionDistance = intersectionDistance;
+						hitObject.Type = ObjectType.Triangle;
+						hitObject.Index = triIndex;
+					}
+				}
+			}
+
+			return new IntersectionResult
+			{
+				Distance = smallestIntersectionDistance,
+				ObjectId = hitObject,
+			};
 		}
 	}
 }
