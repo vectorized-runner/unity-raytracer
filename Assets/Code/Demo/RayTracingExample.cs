@@ -260,7 +260,7 @@ namespace RayTracer
 					var index = GetPixelIndex(new int2(x, y), resX);
 					var intersectionResult = RaySceneIntersection(ray);
 					
-					if (intersectionResult.ObjectType != ObjectType.None)
+					if (intersectionResult.ObjectId.Type != ObjectType.None)
 					{
 						PixelColors[index] = CalculatePixelColor(ray, cameraPosition, intersectionResult).Color;
 
@@ -315,8 +315,11 @@ namespace RayTracer
 			return new IntersectionResult
 			{
 				Distance = smallestIntersectionDistance,
-				ObjectType = hitObject,
-				ObjectIndex = hitObjectIndex
+				ObjectId = new ObjectId
+				{
+					Index = hitObjectIndex,
+					Type = hitObject,
+				}
 			};
 		}
 
@@ -325,9 +328,8 @@ namespace RayTracer
 		private Rgb CalculatePixelColor(Ray ray, float3 cameraPosition, IntersectionResult result)
 		{
 			var surfacePoint = ray.GetPoint(result.Distance);
-			var objectType = result.ObjectType;
-			var objectIndex = result.ObjectIndex;
-			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, objectType, objectIndex);
+			var objectId = result.ObjectId;
+			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, objectId);
 			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
 			foreach (var pointLight in PointLights)
@@ -339,7 +341,7 @@ namespace RayTracer
 				var intersectResult = RaySceneIntersection(shadowRay);
 				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
 
-				if (intersectResult.ObjectType != ObjectType.None)
+				if (objectId.Type != ObjectType.None)
 				{
 					var hitDistanceSq = intersectResult.Distance * intersectResult.Distance;
 					if (hitDistanceSq < lightDistanceSq)
@@ -350,7 +352,7 @@ namespace RayTracer
 				}
 				
 				// Shadow ray hit this object again, shouldn't happen
-				Debug.Assert(!(intersectResult.ObjectType == objectType && intersectResult.ObjectIndex == objectIndex));
+				Debug.Assert(intersectResult.ObjectId != objectId);
 				
 				var cameraDirection = math.normalize(cameraPosition - surfacePoint);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
@@ -372,22 +374,24 @@ namespace RayTracer
 		}
 
 		// TODO-Implementation: Ensure that we will run full color equation on these objects
-		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, int currentBounces)
+		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, float3 mirrorReflectance, int currentBounces)
 		{
 			if (currentBounces >= ReflectionBounces)
 				return new Rgb(0);
 
 			var result = RaySceneIntersection(ray);
-			var objectType = result.ObjectType;
-			if (objectType == ObjectType.None)
+			var objectId = result.ObjectId;
+			if (objectId.Type == ObjectType.None)
 				return new Rgb(0);
 			
 			var surfacePoint = ray.GetPoint(result.Distance);
-			var objectIndex = result.ObjectIndex;
 			var thisColor = CalculatePixelColor(ray, cameraPosition, result);
-			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectType, objectIndex);
+			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
-			return thisColor + PathTrace(newRay, cameraPosition, cameraDirection, currentBounces + 1);
+			var hitMirrorReflectance = GetMirrorReflectance(objectId);
+			var recursiveTrace = PathTrace(newRay, cameraPosition, cameraDirection, hitMirrorReflectance, currentBounces + 1);
+
+			return new Rgb((thisColor + recursiveTrace).Value * mirrorReflectance);
 		}
 
 		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection)
@@ -425,17 +429,31 @@ namespace RayTracer
 			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
-		private float3 GetSurfaceNormal(float3 surfacePoint, ObjectType objectType, int objectIndex)
+		private float3 GetSurfaceNormal(float3 surfacePoint, ObjectId objectId)
 		{
-			switch (objectType)
+			switch (objectId.Type)
 			{
 				case ObjectType.Sphere:
-					return GetSphereNormal(surfacePoint, objectIndex);
+					return GetSphereNormal(surfacePoint, objectId.Index);
 				case ObjectType.Triangle:
-					return TriangleNormals[objectIndex];
+					return TriangleNormals[objectId.Index];
 				case ObjectType.None:
 				default:
-					throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
+					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
+			}
+		}
+
+		private float3 GetMirrorReflectance(ObjectId id)
+		{
+			switch (id.Type)
+			{
+				case ObjectType.Sphere:
+					return SphereMaterials[id.Index].MirrorReflectance;
+				case ObjectType.Triangle:
+					return TriangleMaterials[id.Index].MirrorReflectance;
+				case ObjectType.None:
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 
@@ -446,25 +464,25 @@ namespace RayTracer
 			return surfaceNormal;
 		}
 
-		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectType objectType, int objectIndex)
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectId objectId)
 		{
-			switch (objectType)
+			switch (objectId.Type)
 			{
 				case ObjectType.Sphere:
 				{
-					var surfaceNormal = GetSphereNormal(surfacePoint, objectIndex);
-					var material = SphereMaterials[objectIndex];
+					var surfaceNormal = GetSphereNormal(surfacePoint, objectId.Index);
+					var material = SphereMaterials[objectId.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.Triangle:
 				{
-					var surfaceNormal = TriangleNormals[objectIndex];
-					var material = TriangleMaterials[objectIndex];
+					var surfaceNormal = TriangleNormals[objectId.Index];
+					var material = TriangleMaterials[objectId.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.None:
 				default:
-					throw new ArgumentOutOfRangeException(nameof(objectType), objectType, null);
+					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
 			}
 		}
 
