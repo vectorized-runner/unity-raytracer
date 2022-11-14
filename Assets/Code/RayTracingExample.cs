@@ -50,7 +50,6 @@ public struct ImagePlane
 		return cameraData.Position + cameraData.Forward * DistanceToCamera;
 	}
 
-	// TODO: All these positions needs to Rotate along with Camera
 	public ImageRect GetRect(CameraData cameraData)
 	{
 		var center = Center(cameraData);
@@ -135,14 +134,17 @@ public class RayTracingExample : MonoBehaviour
 		var start = ImagePlane.GetRect(cameraData).TopLeft;
 		var resolutionX = ImagePlane.Resolution.X;
 
+		var up = cameraData.Up;
+		var right = cameraData.Right;
+
 		if (ToggleDrawHorizontalLines)
 		{
 			// Horizontal Lines
 			for (var x = 0; x <= resolutionX; x++)
 			{
 				var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
-				var lineStart = start + new float3(0, -moveDownLength, 0);
-				var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
+				var lineStart = start - up * moveDownLength;
+				var lineEnd = lineStart + right * ImagePlane.HorizontalLength;
 				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
@@ -155,8 +157,8 @@ public class RayTracingExample : MonoBehaviour
 			for (var y = 0; y <= resolutionY; y++)
 			{
 				var moveRightLength = ImagePlane.HorizontalLength * y / resolutionY;
-				var lineStart = start + new float3(moveRightLength, 0, 0);
-				var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
+				var lineStart = start + right * moveRightLength;
+				var lineEnd = lineStart - up * ImagePlane.VerticalLength;
 				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
