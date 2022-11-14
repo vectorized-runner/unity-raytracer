@@ -5,6 +5,20 @@ using UnityEngine;
 
 namespace RayTracer
 {
+	[Serializable]
+	public struct TriangleData
+	{
+		public List<Triangle> Triangles;
+		public List<float3> Normals;
+		public List<MaterialData> Materials;
+
+		public void Clear()
+		{
+			Triangles.Clear();
+			Normals.Clear();
+			Materials.Clear();
+		}
+	}
 	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
 	// TODO-Optimization: Consider not storing Triangle normals
 	public class RayTracingSetup : MonoBehaviour
@@ -35,10 +49,7 @@ namespace RayTracer
 		public List<Sphere> Spheres;
 		public List<MaterialData> SphereMaterials;
 
-		// Triangles
-		public List<Triangle> Triangles;
-		public List<MaterialData> TriangleMaterials;
-		public List<float3> TriangleNormals;
+		public TriangleData TriangleData;
 
 		// Meshes
 		public List<Mesh> Meshes;
@@ -51,6 +62,12 @@ namespace RayTracer
 		private void Start()
 		{
 			Spheres = new List<Sphere>();
+			TriangleData = new TriangleData
+			{
+				Normals = new List<float3>(),
+				Triangles = new List<Triangle>(),
+				Materials = new List<MaterialData>(),
+			};
 		}
 
 		private void OnDrawGizmos()
@@ -146,15 +163,13 @@ namespace RayTracer
 
 		private void FetchTriangles()
 		{
-			Triangles.Clear();
-			TriangleNormals.Clear();
-			TriangleMaterials.Clear();
+			TriangleData.Clear();
 
 			foreach (var triangle in FindObjectsOfType<SceneTriangle>())
 			{
-				Triangles.Add(triangle.Triangle);
-				TriangleNormals.Add(triangle.Triangle.Normal);
-				TriangleMaterials.Add(triangle.Material);
+				TriangleData.Triangles.Add(triangle.Triangle);
+				TriangleData.Normals.Add(triangle.Triangle.Normal);
+				TriangleData.Materials.Add(triangle.Material);
 			}
 		}
 
@@ -212,7 +227,7 @@ namespace RayTracer
 
 		private void DrawTriangles()
 		{
-			foreach (var triangle in Triangles)
+			foreach (var triangle in TriangleData.Triangles)
 			{
 				DrawTriangle(triangle);
 			}
@@ -339,9 +354,10 @@ namespace RayTracer
 				}
 			}
 
-			for (var triIndex = 0; triIndex < Triangles.Count; triIndex++)
+			var triangles = TriangleData.Triangles;
+			for (var triIndex = 0; triIndex < triangles.Count; triIndex++)
 			{
-				var triangle = Triangles[triIndex];
+				var triangle = triangles[triIndex];
 				if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 				{
 					if (smallestIntersectionDistance > intersectionDistance)
@@ -465,7 +481,7 @@ namespace RayTracer
 				case ObjectType.Sphere:
 					return GetSphereNormal(surfacePoint, objectId.Index);
 				case ObjectType.Triangle:
-					return TriangleNormals[objectId.Index];
+					return TriangleData.Normals[objectId.Index];
 				case ObjectType.MeshTriangle:
 					return Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
 				case ObjectType.None:
@@ -481,7 +497,7 @@ namespace RayTracer
 				case ObjectType.Sphere:
 					return SphereMaterials[id.Index].MirrorReflectance;
 				case ObjectType.Triangle:
-					return TriangleMaterials[id.Index].MirrorReflectance;
+					return TriangleData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.MeshTriangle:
 					return Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
 				case ObjectType.None:
@@ -510,8 +526,8 @@ namespace RayTracer
 				}
 				case ObjectType.Triangle:
 				{
-					var surfaceNormal = TriangleNormals[id.Index];
-					var material = TriangleMaterials[id.Index];
+					var surfaceNormal = TriangleData.Normals[id.Index];
+					var material = TriangleData.Materials[id.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.MeshTriangle:
