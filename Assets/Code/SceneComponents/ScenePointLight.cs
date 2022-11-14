@@ -4,6 +4,12 @@ namespace RayTracer
 {
 	public class ScenePointLight : MonoBehaviour
 	{
-		public PointLightData Light;
+		public float Intensity;
+
+		public PointLightData Light => new PointLightData
+		{
+			Position = transform.position,
+			Intensity = Intensity
+		};
 	}
 }
