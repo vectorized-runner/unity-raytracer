@@ -290,14 +290,14 @@ namespace RayTracer
 					Direction = normalize(pixelPosition - cameraPosition)
 				};
 				var index = GetPixelIndex(new int2(x, y), resX);
-				PixelColors[index] = Shade(ray, cameraPosition, 0).Color;
+				PixelColors[index] = Shade(ray, 0).Color;
 			}
 		}
 
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb Shade(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
+		private Rgb Shade(Ray pixelRay, int currentRayBounce)
 		{
 			Debug.Assert(IsNormalized(pixelRay.Direction));
 
@@ -315,9 +315,10 @@ namespace RayTracer
 			}
 
 			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
+			var rayOrigin = pixelRay.Origin;
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var color = CalculateAmbient(material.AmbientReflectance, Scene.AmbientLight.Radiance);
-			var cameraDirection = normalize(cameraPosition - surfacePoint);
+			var rayDirection = normalize(rayOrigin - surfacePoint);
 
 			foreach (var pointLight in Scene.PointLights)
 			{
@@ -344,32 +345,32 @@ namespace RayTracer
 
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
 				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var specularRgb = CalculateSpecular(lightDirection, rayDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				color += diffuseRgb + specularRgb;
 			}
 
 			if (material.IsMirror && currentRayBounce < MaxReflectionBounces)
 			{
-				var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
+				var reflectRay = Reflect(surfacePoint, surfaceNormal, rayDirection);
 				var mirrorReflectance = material.MirrorReflectance;
-				color += new Rgb(mirrorReflectance * Shade(reflectRay, cameraPosition, currentRayBounce + 1).Value);
+				color += new Rgb(mirrorReflectance * Shade(reflectRay, currentRayBounce + 1).Value);
 			}
 
 			return color;
 		}
 
-		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection)
+		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 rayDirection)
 		{
 			var newRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
-			var newRayNormal = 2 * surfaceNormal * dot(cameraDirection, surfaceNormal) - cameraDirection;
+			var newRayNormal = 2 * surfaceNormal * dot(rayDirection, surfaceNormal) - rayDirection;
 			return new Ray(newRayOrigin, newRayNormal);
 		}
 
-		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal,
+		private Rgb CalculateSpecular(float3 lightDirection, float3 rayDirection, float3 surfaceNormal,
 			float3 specularReflectance, float3 receivedIrradiance, float phongExponent)
 		{
 			Debug.Assert(IsNormalized(lightDirection));
-			Debug.Assert(IsNormalized(cameraDirection));
+			Debug.Assert(IsNormalized(rayDirection));
 			Debug.Assert(IsNormalized(surfaceNormal));
 
 			var lightDotNormal = dot(lightDirection, surfaceNormal);
@@ -384,7 +385,7 @@ namespace RayTracer
 				return new Rgb(0);
 			}
 
-			var v = lightDirection + cameraDirection;
+			var v = lightDirection + rayDirection;
 			var halfwayVector = v / length(v);
 			Debug.Assert(IsNormalized(halfwayVector));
 
