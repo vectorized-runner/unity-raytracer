@@ -4,8 +4,8 @@ using Unity.Mathematics;
 namespace RayTracer
 {
 	[Serializable]
-	public struct MaterialData
+	public struct Rgb
 	{
-		public float3 DiffuseReflectance;
+		public float3 Value;
 	}
 }

@@ -63,7 +63,7 @@ namespace RayTracer
 		// TODO-Optimize: On 2 root case, if t0 is greater than zero, we don't have to check t1.
 		public static bool RaySphereIntersection(Ray ray, Sphere sphere, out float closestIntersectionDistance)
 		{
-			Debug.Assert(IsLengthEqual(ray.Direction, 1f));
+			Debug.Assert(IsNormalized(ray.Direction));
 
 			var oc = ray.Origin - sphere.Center;
 			var uoc = dot(ray.Direction, oc);
@@ -98,6 +98,11 @@ namespace RayTracer
 		public static bool IsLengthEqual(float3 v, float length)
 		{
 			return abs(lengthsq(v) - length * length) < Epsilon;
+		}
+
+		public static bool IsNormalized(float3 v)
+		{
+			return IsLengthEqual(v, 1f);
 		}
 	}
 }

@@ -288,10 +288,20 @@ namespace RayTracer
 				}
 			}
 		}
-
+		
 		private Color CalculatePixelColor(ObjectType objectType, int objectIndex)
 		{
 			return Color.white;
+		}
+
+		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)
+		{
+			var cosTheta = math.max(0, math.dot(directionToLight, surfaceNormal));
+			
+			return new Rgb
+			{
+				Value = diffuseReflectance * cosTheta * (lightIntensity / distanceToLightSquared)
+			};
 		}
 
 		private void DrawRays(CameraData cameraData)
