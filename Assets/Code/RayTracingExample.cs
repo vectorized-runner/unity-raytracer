@@ -14,6 +14,10 @@ namespace RayTracer
 		public float3 BottomLeft;
 	}
 
+	/// <summary>
+	/// TopLeft Coordinates is (0, 0), Going right goes in +x coordinates, going down goes in +y coordinates
+	/// X is Horizontal, Y is Vertical
+	/// </summary>
 	[Serializable]
 	public struct ImagePlane
 	{
@@ -69,6 +73,7 @@ namespace RayTracer
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawRays = true;
 		public bool ToggleDrawIntersections = true;
+		public bool ToggleDrawPixelColors = true;
 
 		// These are for debug drawing
 		public Color ImagePlaneColor = Color.red;
@@ -79,7 +84,7 @@ namespace RayTracer
 		public List<Sphere> Spheres;
 		public List<Triangle> Triangles;
 
-		private Color[] PixelColors;
+		private Color[] PixelColors = new Color[0];
 
 		private void Start()
 		{
@@ -99,6 +104,35 @@ namespace RayTracer
 				}
 			}
 
+			if (ToggleDrawPixelColors)
+			{
+				var origColor = Gizmos.color;
+				Gizmos.color = Color.black;
+				Gizmos.DrawCube(float3.zero, new float3(10f, 10f, 0.1f));
+				
+				var resX = ImagePlane.Resolution.X;
+				var resY = ImagePlane.Resolution.Y;
+				var topLeft = ImagePlane.GetRect(CameraData).TopLeft;
+				var up = CameraData.Up;
+				var right = CameraData.Right;
+				var horizontalLength = ImagePlane.HorizontalLength;
+				var verticalLength = ImagePlane.VerticalLength;
+
+				var size = new float3(horizontalLength / resX, verticalLength / resY, 0.01f);
+				
+				for (var pixelIndex = 0; pixelIndex < PixelColors.Length; pixelIndex++)
+				{
+					var pixelCoordinates = GetPixelCoordinates(pixelIndex, resX);
+					var rightMove = (pixelCoordinates.x + 0.5f) * horizontalLength / resX;
+					var downMove = (pixelCoordinates.y + 0.5f) * verticalLength / resY;
+					var pixelPosition = topLeft + rightMove * right - up * downMove;
+					Gizmos.color = PixelColors[pixelIndex];
+					Gizmos.DrawCube(pixelPosition, size);
+				}
+				
+				Gizmos.color = origColor;
+			}
+
 			if (ToggleDrawImagePlane)
 			{
 				var rect = ImagePlane.GetRect(CameraData);
@@ -107,6 +141,11 @@ namespace RayTracer
 				Gizmos.DrawSphere(rect.BottomLeft, 1f);
 				Gizmos.DrawSphere(rect.BottomRight, 1f);
 			}
+		}
+
+		private int2 GetPixelCoordinates(int pixelIndex, int resolutionX)
+		{
+			return new int2(pixelIndex % resolutionX, pixelIndex / resolutionX);
 		}
 
 		void Update()
@@ -300,7 +339,7 @@ namespace RayTracer
 
 		private Color CalculatePixelColor()
 		{
-			throw new NotImplementedException();
+			return Color.white;
 		}
 		
 		private void DrawRays(CameraData cameraData)
