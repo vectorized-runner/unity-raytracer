@@ -82,6 +82,9 @@ public class RayTracingExample : MonoBehaviour
 	public bool ToggleDrawBounds = true;
 	public bool ToggleDrawHorizontalLines = true;
 	public bool ToggleDrawVerticalLines = true;
+
+	public Color ImagePlaneColor = Color.red;
+	public Color RayColor = Color.yellow;
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
@@ -138,7 +141,7 @@ public class RayTracingExample : MonoBehaviour
 				var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
 				var lineStart = start + new float3(0, -moveDownLength, 0);
 				var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
-				Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
 
@@ -152,7 +155,7 @@ public class RayTracingExample : MonoBehaviour
 				var moveRightLength = ImagePlane.HorizontalLength * y / resolutionY;
 				var lineStart = start + new float3(moveRightLength, 0, 0);
 				var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
-				Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+				Debug.DrawLine(lineStart, lineEnd, ImagePlaneColor);
 			}
 		}
 	}
@@ -160,10 +163,11 @@ public class RayTracingExample : MonoBehaviour
 	private void DrawBounds(CameraData cameraData)
 	{
 		var rect = ImagePlane.GetRect(cameraData);
-		Debug.DrawLine(rect.TopLeft, rect.TopRight, Color.red);
-		Debug.DrawLine(rect.TopLeft, rect.BottomLeft, Color.red);
-		Debug.DrawLine(rect.TopRight, rect.BottomRight, Color.red);
-		Debug.DrawLine(rect.BottomLeft, rect.BottomRight, Color.red);
+		var color = ImagePlaneColor;
+		Debug.DrawLine(rect.TopLeft, rect.TopRight, color);
+		Debug.DrawLine(rect.TopLeft, rect.BottomLeft, color);
+		Debug.DrawLine(rect.TopRight, rect.BottomRight, color);
+		Debug.DrawLine(rect.BottomLeft, rect.BottomRight, color);
 	}
 
 	void DrawIntersections()
