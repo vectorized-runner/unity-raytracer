@@ -363,7 +363,8 @@ namespace RayTracer
 				{
 					// Bounce the first one manually to avoid recalculation of color
 					var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
-					finalRgb += PathTrace(reflectRay, cameraPosition, cameraDirection, 1);
+					var mirrorReflectance = material.MirrorReflectance;
+					finalRgb += PathTrace(reflectRay, cameraPosition, cameraDirection, mirrorReflectance, 1);
 				}
 				
 				
