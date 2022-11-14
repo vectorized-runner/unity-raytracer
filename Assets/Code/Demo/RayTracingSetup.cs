@@ -32,6 +32,18 @@ namespace RayTracer
 			Materials.Clear();
 		}
 	}
+
+	[Serializable]
+	public struct MeshData
+	{
+		public List<Mesh> Meshes;
+
+		public void Clear()
+		{
+			Meshes.Clear();
+		}
+	}
+	
 	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
 	// TODO-Optimization: Consider not storing Triangle normals
 	public class RayTracingSetup : MonoBehaviour
@@ -59,10 +71,7 @@ namespace RayTracer
 
 		public SphereData SphereData;
 		public TriangleData TriangleData;
-
-		// Meshes
-		public List<Mesh> Meshes;
-
+		public MeshData MeshData;
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
 
@@ -81,6 +90,11 @@ namespace RayTracer
 				Normals = new List<float3>(),
 				Triangles = new List<Triangle>(),
 				Materials = new List<MaterialData>(),
+			};
+
+			MeshData = new MeshData
+			{
+				Meshes = new List<Mesh>(),
 			};
 		}
 
@@ -219,7 +233,7 @@ namespace RayTracer
 
 		private void DrawMeshTriangles()
 		{
-			foreach (var mesh in Meshes)
+			foreach (var mesh in MeshData.Meshes)
 			{
 				foreach (var triangle in mesh.Triangles)
 				{
@@ -266,11 +280,11 @@ namespace RayTracer
 
 		private void FetchMeshes()
 		{
-			Meshes.Clear();
+			MeshData.Clear();
 
 			foreach (var mesh in FindObjectsOfType<SceneMesh>())
 			{
-				Meshes.Add(mesh.Mesh);
+				MeshData.Meshes.Add(mesh.Mesh);
 			}
 		}
 
@@ -330,9 +344,10 @@ namespace RayTracer
 				Type = ObjectType.None
 			};
 
-			for (int meshIndex = 0; meshIndex < Meshes.Count; meshIndex++)
+			var meshes = MeshData.Meshes;
+			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
 			{
-				var mesh = Meshes[meshIndex];
+				var mesh = meshes[meshIndex];
 				if (RMath.RayAABBIntersection(ray, mesh.AABB))
 				{
 					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
@@ -497,7 +512,7 @@ namespace RayTracer
 				case ObjectType.Triangle:
 					return TriangleData.Normals[objectId.Index];
 				case ObjectType.MeshTriangle:
-					return Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
+					return MeshData.Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
@@ -513,7 +528,7 @@ namespace RayTracer
 				case ObjectType.Triangle:
 					return TriangleData.Materials[id.Index].MirrorReflectance;
 				case ObjectType.MeshTriangle:
-					return Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
+					return MeshData.Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -546,8 +561,8 @@ namespace RayTracer
 				}
 				case ObjectType.MeshTriangle:
 				{
-					var surfaceNormal = Meshes[id.MeshIndex].TriangleNormals[id.Index];
-					var material = Meshes[id.MeshIndex].MaterialData;
+					var surfaceNormal = MeshData.Meshes[id.MeshIndex].TriangleNormals[id.Index];
+					var material = MeshData.Meshes[id.MeshIndex].MaterialData;
 					return (surfaceNormal, material);
 				}
 				case ObjectType.None:
