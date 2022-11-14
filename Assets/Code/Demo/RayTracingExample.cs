@@ -385,6 +385,7 @@ namespace RayTracer
 
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
+		// TODO: Optimize crash (infinite loop) here.
 		private Rgb CalculatePixelColor(Ray ray, float3 cameraPosition, IntersectionResult result)
 		{
 			var surfacePoint = ray.GetPoint(result.Distance);
