@@ -384,7 +384,7 @@ namespace RayTracer
 			
 			var surfacePoint = pixelRay.GetPoint(result.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
-			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
+			var color = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
 			foreach (var pointLight in PointLights)
 			{
@@ -419,14 +419,14 @@ namespace RayTracer
 					// Bounce the first one manually to avoid recalculation of color
 					var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 					var mirrorReflectance = material.MirrorReflectance;
-					finalRgb += PathTrace(reflectRay, cameraPosition, cameraDirection, mirrorReflectance, 1);
+					color += PathTrace(reflectRay, cameraPosition, cameraDirection, mirrorReflectance, 1);
 				}
 
 
-				finalRgb += diffuseRgb + specularRgb;
+				color += diffuseRgb + specularRgb;
 			}
 
-			return finalRgb;
+			return color;
 		}
 
 		// TODO-Implementation: Ensure that we will run full color equation on these objects
