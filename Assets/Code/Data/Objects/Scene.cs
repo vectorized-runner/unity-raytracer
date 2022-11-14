@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using static RayTracer.RMath;
 
 namespace RayTracer
 {
@@ -50,7 +51,7 @@ namespace RayTracer
 			};
 
 			// If ray doesn't intersect with Scene AABB, there's no need to check any object
-			if (!RMath.RayAABBIntersection(ray, AABB))
+			if (!RayAABBIntersection(ray, AABB))
 			{
 				return new IntersectionResult
 				{
@@ -63,13 +64,13 @@ namespace RayTracer
 			for (int meshIndex = 0; meshIndex < meshes.Count; meshIndex++)
 			{
 				var mesh = meshes[meshIndex];
-				if (RMath.RayAABBIntersection(ray, mesh.AABB))
+				if (RayAABBIntersection(ray, mesh.AABB))
 				{
 					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
 					{
 						var triangle = mesh.Triangles[triIndex];
 
-						if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+						if (RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 						{
 							if (smallestIntersectionDistance > intersectionDistance)
 							{
@@ -87,7 +88,7 @@ namespace RayTracer
 			for (var sphereIndex = 0; sphereIndex < spheres.Count; sphereIndex++)
 			{
 				var sphere = spheres[sphereIndex];
-				if (RMath.RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
+				if (RaySphereIntersection(ray, sphere, out var closestIntersectionDistance))
 				{
 					if (smallestIntersectionDistance > closestIntersectionDistance)
 					{
@@ -102,7 +103,7 @@ namespace RayTracer
 			for (var triIndex = 0; triIndex < triangles.Count; triIndex++)
 			{
 				var triangle = triangles[triIndex];
-				if (RMath.RayTriangleIntersection(ray, triangle, out var intersectionDistance))
+				if (RayTriangleIntersection(ray, triangle, out var intersectionDistance))
 				{
 					if (smallestIntersectionDistance > intersectionDistance)
 					{
