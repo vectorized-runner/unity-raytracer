@@ -14,12 +14,10 @@ namespace RayTracer
 			var vertex0 = triangle.Vertices.x;
 			var vertex1 = triangle.Vertices.y;
 			var vertex2 = triangle.Vertices.z;
-			float3 edge1, edge2, h, s, q;
-			float a, f, u, v;
-			edge1 = vertex1 - vertex0;
-			edge2 = vertex2 - vertex0;
-			h = cross(ray.Direction, edge2);
-			a = dot(edge1, h);
+			var edge1 = vertex1 - vertex0;
+			var edge2 = vertex2 - vertex0;
+			var h = cross(ray.Direction, edge2);
+			var a = dot(edge1, h);
 
 			if (a > -epsilon && a < epsilon)
 			{
@@ -27,17 +25,17 @@ namespace RayTracer
 				return false; // This ray is parallel to this triangle.
 			}
 
-			f = 1.0f / a;
-			s = ray.Origin - vertex0;
-			u = f * dot(s, h);
+			var f = 1.0f / a;
+			var s = ray.Origin - vertex0;
+			var u = f * dot(s, h);
 			if (u < 0.0 || u > 1.0)
 			{
 				intersection = default;
 				return false;
 			}
 
-			q = cross(s, edge1);
-			v = f * dot(ray.Direction, q);
+			var q = cross(s, edge1);
+			var v = f * dot(ray.Direction, q);
 			if (v < 0.0 || u + v > 1.0)
 			{
 				intersection = default;
