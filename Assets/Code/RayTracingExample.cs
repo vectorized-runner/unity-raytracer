@@ -161,7 +161,8 @@ public class RayTracingExample : MonoBehaviour
 
 	void DrawImagePlane(CameraData cameraData)
 	{
-		DrawBounds(cameraData);
+		// This is no longer required, as the lines already draw the bounds
+		// DrawBounds(cameraData);
 		DrawLines(cameraData);
 	}
 
