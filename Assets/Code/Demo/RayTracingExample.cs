@@ -323,6 +323,7 @@ namespace RayTracer
 						var directionToLight = math.normalize(lightPosition - pointOnSurface);
 						var rgb = CalculateDiffuse(pointLight.Intensity, distanceSq, diffuseReflectance, surfaceNormal, directionToLight);
 						result += rgb;
+						// Debug.Log($"Rgb is: {rgb}");
 						break;
 					}
 					case ObjectType.Triangle:

@@ -97,4 +97,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Material:
-    DiffuseReflectance: 1
+    DiffuseReflectance:
+      x: 1
+      y: 1
+      z: 1

@@ -20,5 +20,10 @@ namespace RayTracer
 		public static Rgb operator -(Rgb a) => new(-a.Value);
 		public static Rgb operator +(Rgb a, Rgb b) => new(a.Value + b.Value);
 		public static Rgb operator -(Rgb a, Rgb b) => a + -b;
+
+		public override string ToString()
+		{
+			return Value.ToString();
+		}
 	}
 }

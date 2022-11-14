@@ -282,14 +282,17 @@ MonoBehaviour:
   ToggleDrawPixelRays: 1
   ToggleDrawIntersections: 1
   ToggleDrawPixelColors: 1
+  ToggleDrawSurfaceNormals: 1
   ImagePlaneColor: {r: 1, g: 0, b: 0, a: 1}
   RayColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   IntersectionColor: {r: 0, g: 1, b: 1, a: 1}
   TriangleColor: {r: 0, g: 1, b: 0, a: 1}
+  SurfaceNormalColor: {r: 0, g: 1, b: 0, a: 1}
   Spheres: []
   SphereMaterials: []
   PointLights: []
   Triangles: []
+  TriangleNormals: []
 --- !u!4 &1410821753
 Transform:
   m_ObjectHideFlags: 0
@@ -326,7 +329,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2744422988296479905, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15
+      value: 29.6
       objectReference: {fileID: 0}
     - target: {fileID: 2744422988296479905, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
       propertyPath: m_LocalRotation.w
@@ -379,15 +382,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8354327454349592853, guid: 95a021d98f1ea44f396ed0205f71f1df, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 10.124165
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8354327454349592853, guid: 95a021d98f1ea44f396ed0205f71f1df, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.3876195
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8354327454349592853, guid: 95a021d98f1ea44f396ed0205f71f1df, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.2772758
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8354327454349592853, guid: 95a021d98f1ea44f396ed0205f71f1df, type: 3}
       propertyPath: m_LocalRotation.w
