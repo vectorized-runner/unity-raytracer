@@ -374,6 +374,8 @@ namespace RayTracer
 			if (pixelRayHitObject.Type == ObjectType.None)
 				return new Rgb(BackgroundColor);
 	
+			Debug.Assert(pixelRayHitObject.Type != ObjectType.None);
+			
 			if (ToggleDrawIntersections)
 			{
 				var intersectionPoint = pixelRay.GetPoint(result.Distance);
@@ -392,8 +394,9 @@ namespace RayTracer
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
 				var shadowRayHitResult = RaySceneIntersection(shadowRay);
 				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
-
-				if (pixelRayHitObject.Type != ObjectType.None)
+				
+				// TODO-Optimize: We can remove this branch, if ray-scene intersection returns infinite distance by default
+				if (shadowRayHitResult.ObjectId.Type != ObjectType.None)
 				{
 					var hitDistanceSq = shadowRayHitResult.Distance * shadowRayHitResult.Distance;
 					if (hitDistanceSq < lightDistanceSq)
