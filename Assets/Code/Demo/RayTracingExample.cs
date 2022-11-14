@@ -359,8 +359,9 @@ namespace RayTracer
 
 				if (material.IsMirror)
 				{
-					// TODO-Implement: We need to Bounce the first one manually, since we will not calculate its full color again
-					finalRgb += PathTrace(ray, cameraPosition, cameraDirection, 0);
+					// Bounce the first one manually to avoid recalculation of color
+					var reflectRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
+					finalRgb += PathTrace(reflectRay, cameraPosition, cameraDirection, 1);
 				}
 				
 				
@@ -380,13 +381,9 @@ namespace RayTracer
 			if (objectType == ObjectType.None)
 				return new Rgb(0);
 			
-			// TODO-Implement: Run Color equation for this object
 			var surfacePoint = ray.GetPoint(result.Distance);
 			var objectIndex = result.ObjectIndex;
-
-			var thisColor = new Rgb(0);
-			// var thisColor = CalculatePixelColor(cameraPosition, surfacePoint, objectType, objectIndex);
-
+			var thisColor = CalculatePixelColor(ray, cameraPosition, result);
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectType, objectIndex);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 			return thisColor + PathTrace(newRay, cameraPosition, cameraDirection, currentBounces + 1);
