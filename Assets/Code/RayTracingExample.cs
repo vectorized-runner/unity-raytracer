@@ -112,6 +112,7 @@ namespace RayTracer
 		void Update()
 		{
 			var cam = Camera.main;
+			
 			CameraData = new CameraData
 			{
 				Position = cam.transform.position,
@@ -119,6 +120,8 @@ namespace RayTracer
 				Right = math.normalize(cam.transform.right),
 				Up = math.normalize(cam.transform.up)
 			};
+			
+			ClearScreen();
 
 			if (Input.GetKeyDown(KeyCode.Space))
 			{
