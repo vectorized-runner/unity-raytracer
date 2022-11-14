@@ -371,6 +371,7 @@ namespace RayTracer
 			return finalRgb;
 		}
 
+		// TODO-Implementation: Ensure that we will run full color equation on these objects
 		private Rgb PathTrace(Ray ray, float3 cameraPosition, float3 cameraDirection, int currentBounces)
 		{
 			if (currentBounces >= ReflectionBounces)
