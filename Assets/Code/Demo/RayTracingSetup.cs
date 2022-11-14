@@ -7,6 +7,13 @@ using static RayTracer.RMath;
 
 namespace RayTracer
 {
+	/// <summary>
+	/// Future Optimization Choices:
+	/// Implementing a BVH
+	/// Cache MaterialIds, instead of storing Materials directly
+	/// Multithreading
+	/// Burst Compile
+	/// </summary>
 	// TODO-Optimization: Consider using MaterialId's, since there are very few materials
 	// TODO-Optimization: Consider not storing Triangle normals
 	public class RayTracingSetup : MonoBehaviour
@@ -294,9 +301,6 @@ namespace RayTracer
 			}
 		}
 
-		// TODO-Optimize: Caching of data here.
-		// TODO-Optimize: There are math inefficiencies here.
-		// TODO: Optimize crash (infinite loop) here.
 		private Rgb Shade(Ray pixelRay, int currentRayBounce)
 		{
 			Debug.Assert(IsNormalized(pixelRay.Direction));
@@ -344,8 +348,10 @@ namespace RayTracer
 				Debug.Assert(shadowRayHitResult.ObjectId != pixelRayHitObject);
 
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, rayDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
+					lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, rayDirection, surfaceNormal,
+					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				color += diffuseRgb + specularRgb;
 			}
 
