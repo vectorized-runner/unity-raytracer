@@ -354,26 +354,14 @@ MonoBehaviour:
   MaxReflectionBounces: 5
   ToggleDrawImagePlane: 0
   ToggleDrawPixelRays: 0
-  ToggleDrawIntersections: 1
-  ToggleDrawPixelColors: 1
+  ToggleDrawIntersections: 0
+  ToggleDrawPixelColors: 0
   ToggleDrawSurfaceNormals: 0
   ImagePlaneColor: {r: 1, g: 0, b: 0, a: 1}
   RayColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   IntersectionColor: {r: 0, g: 1, b: 1, a: 1}
   TriangleColor: {r: 0, g: 1, b: 0, a: 1}
   SurfaceNormalColor: {r: 0, g: 1, b: 0, a: 1}
-  PointLights: []
-  AmbientLight:
-    Radiance:
-      x: 0
-      y: 0
-      z: 0
-  Spheres: []
-  SphereMaterials: []
-  Triangles: []
-  TriangleMaterials: []
-  TriangleNormals: []
-  Meshes: []
 --- !u!4 &1410821753
 Transform:
   m_ObjectHideFlags: 0
@@ -453,6 +441,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2744422988296479904, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
+      propertyPath: Material.IsMirror
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2744422988296479904, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
+      propertyPath: Material.SpecularReflectance.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2744422988296479904, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
+      propertyPath: Material.SpecularReflectance.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2744422988296479904, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
+      propertyPath: Material.SpecularReflectance.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2744422988296479905, guid: 35f78cd1d000b41659097754036a19bb, type: 3}
       propertyPath: m_RootOrder
       value: 2
