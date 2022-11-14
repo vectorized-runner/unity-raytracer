@@ -185,7 +185,7 @@ namespace RayTracer
 				DrawRays(CameraData);
 			}
 
-			HandleIntersections(CameraData);
+			CastPixelRays(CameraData);
 		}
 
 		private void DrawMeshTriangles()
@@ -263,7 +263,7 @@ namespace RayTracer
 		// 2. Invert Loop and Run vs. Spheres first, then Run vs. other shapes
 		// Another idea: Run Sphere vs. Pixels first, Then Run Triangle vs. Pixels etc... (homogenous)
 		// TODO-Optimize: We can collect all intersection distances, and find the smallest of them in a separate loop?
-		private void HandleIntersections(CameraData cameraData)
+		private void CastPixelRays(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
 			var resY = ImagePlane.Resolution.Y;
@@ -287,27 +287,8 @@ namespace RayTracer
 					Origin = cameraPosition,
 					Direction = math.normalize(pixelPosition - cameraPosition)
 				};
-
-				// Check intersection against each object
-				{
-					var index = GetPixelIndex(new int2(x, y), resX);
-					var intersectionResult = RaySceneIntersection(ray);
-
-					if (intersectionResult.ObjectId.Type != ObjectType.None)
-					{
-						PixelColors[index] = ShadePixel(ray, cameraPosition, intersectionResult).Color;
-
-						if (ToggleDrawIntersections)
-						{
-							var intersectionPoint = ray.GetPoint(intersectionResult.Distance);
-							Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
-						}
-					}
-					else
-					{
-						PixelColors[index] = BackgroundColor;
-					}
-				}
+				var index = GetPixelIndex(new int2(x, y), resX);
+				PixelColors[index] = ShadePixel(ray, cameraPosition).Color;
 			}
 		}
 
@@ -386,10 +367,20 @@ namespace RayTracer
 		// TODO-Optimize: Caching of data here.
 		// TODO-Optimize: There are math inefficiencies here.
 		// TODO: Optimize crash (infinite loop) here.
-		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition, IntersectionResult result)
+		private Rgb ShadePixel(Ray pixelRay, float3 cameraPosition)
 		{
-			var surfacePoint = pixelRay.GetPoint(result.Distance);
+			var result = RaySceneIntersection(pixelRay);
 			var pixelRayHitObject = result.ObjectId;
+			if (pixelRayHitObject.Type == ObjectType.None)
+				return new Rgb(BackgroundColor);
+	
+			if (ToggleDrawIntersections)
+			{
+				var intersectionPoint = pixelRay.GetPoint(result.Distance);
+				Debug.DrawLine(pixelRay.Origin, intersectionPoint, IntersectionColor);
+			}
+			
+			var surfacePoint = pixelRay.GetPoint(result.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
@@ -447,7 +438,7 @@ namespace RayTracer
 				return new Rgb(0);
 
 			var surfacePoint = ray.GetPoint(result.Distance);
-			var thisColor = ShadePixel(ray, cameraPosition, result);
+			var thisColor = ShadePixel(ray, cameraPosition);
 			var surfaceNormal = GetSurfaceNormal(surfacePoint, objectId);
 			var newRay = Reflect(surfacePoint, surfaceNormal, cameraDirection);
 			var hitMirrorReflectance = GetMirrorReflectance(objectId);
