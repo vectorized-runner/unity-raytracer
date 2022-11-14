@@ -62,6 +62,7 @@ namespace RayTracer
 	public class RayTracingExample : MonoBehaviour
 	{
 		public ImagePlane ImagePlane;
+		public Color BackgroundColor = Color.black;
 
 		private CameraData CameraData;
 
@@ -69,6 +70,7 @@ namespace RayTracer
 		public bool ToggleDrawRays = true;
 		public bool ToggleDrawIntersections = true;
 
+		// These are for debug drawing
 		public Color ImagePlaneColor = Color.red;
 		public Color RayColor = Color.yellow;
 		public Color IntersectionColor = Color.cyan;
@@ -76,6 +78,8 @@ namespace RayTracer
 
 		public List<Sphere> Spheres;
 		public List<Triangle> Triangles;
+
+		private Color[] PixelColors;
 
 		private void Start()
 		{
@@ -98,7 +102,6 @@ namespace RayTracer
 			if (ToggleDrawImagePlane)
 			{
 				var rect = ImagePlane.GetRect(CameraData);
-
 				Gizmos.DrawSphere(rect.TopLeft, 1f);
 				Gizmos.DrawSphere(rect.TopRight, 1f);
 				Gizmos.DrawSphere(rect.BottomLeft, 1f);
@@ -145,13 +148,24 @@ namespace RayTracer
 			}
 		}
 
+		private void ClearScreen()
+		{
+			var requiredPixelCount = ImagePlane.Resolution.X * ImagePlane.Resolution.Y;
+			if (requiredPixelCount != PixelColors.Length)
+			{
+				Array.Resize(ref PixelColors, requiredPixelCount);
+			}
+			
+			Array.Clear(PixelColors, 0, requiredPixelCount);
+		}
+
 		private void DrawTriangles()
 		{
 			foreach (var triangle in Triangles)
 			{
-				Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, Color.green);
-				Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, Color.green);
-				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, Color.green);
+				Debug.DrawLine(triangle.Vertex0, triangle.Vertex1, TriangleColor);
+				Debug.DrawLine(triangle.Vertex1, triangle.Vertex2, TriangleColor);
+				Debug.DrawLine(triangle.Vertex2, triangle.Vertex0, TriangleColor);
 			}
 		}
 		
@@ -217,8 +231,10 @@ namespace RayTracer
 			var verticalLength = ImagePlane.VerticalLength;
 			var cameraPosition = cameraData.Position;
 
-			for (int x = 0; x < resX; x++)
+			// Traverse order swapped for better cache usage
+			// arrayIndex = x + y * resX
 			for (int y = 0; y < resY; y++)
+			for (int x = 0; x < resX; x++)
 			{
 				// Get ray
 				var rightMove = (x + 0.5f) * horizontalLength / resX;
@@ -257,15 +273,28 @@ namespace RayTracer
 							}
 						}
 					}
+
+					
+					var index = x + y * resX;
 					if (foundIntersection)
 					{
 						var intersectionPoint = ray.GetPoint(smallestIntersectionDistance);
 						Debug.DrawLine(ray.Origin, intersectionPoint, IntersectionColor);
+						PixelColors[index] = CalculatePixelColor();
+					}
+					else
+					{
+						PixelColors[index] = BackgroundColor;
 					}
 				}
 			}
 		}
 
+		private Color CalculatePixelColor()
+		{
+			throw new NotImplementedException();
+		}
+		
 		private void DrawRays(CameraData cameraData)
 		{
 			var resX = ImagePlane.Resolution.X;
