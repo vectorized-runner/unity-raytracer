@@ -307,7 +307,6 @@ namespace RayTracer
 				var mesh = Meshes[meshIndex];
 				if (RMath.RayAABBIntersection(ray, mesh.AABB))
 				{
-					// TODO: After doing pre-processing, we can add the triangles to the triangle list, just use index at mesh instead?
 					for (var triIndex = 0; triIndex < mesh.Triangles.Length; triIndex++)
 					{
 						var triangle = mesh.Triangles[triIndex];
