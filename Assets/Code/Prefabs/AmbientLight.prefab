@@ -46,6 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AmbientLight:
     Radiance:
-      x: 1
-      y: 1
-      z: 1
+      x: 15
+      y: 15
+      z: 15
