@@ -9,7 +9,7 @@ namespace RayTracer
 	{
 		public ImagePlane ImagePlane;
 		public Color BackgroundColor = Color.black;
-
+		
 		public bool ToggleDrawImagePlane = true;
 		public bool ToggleDrawPixelRays = true;
 		public bool ToggleDrawIntersections = true;
@@ -326,26 +326,26 @@ namespace RayTracer
 			int objectIndex)
 		{
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(pointOnSurface, objectType, objectIndex);
-			var result = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
+			var finalRgb = CalculateAmbient(material.AmbientReflectance, AmbientLight.Radiance);
 
 			foreach (var pointLight in PointLights)
 			{
 				var lightPosition = pointLight.Position;
 				var lightDirection = math.normalize(lightPosition - pointOnSurface);
-				var shadowRay = new Ray(pointOnSurface, lightDirection);
 
-
+				const float shadowRayEpsilon = 0.0001f;
+				var shadowRayOrigin = pointOnSurface + surfaceNormal * shadowRayEpsilon;
+				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
+				
 				var cameraDirection = math.normalize(cameraPosition - pointOnSurface);
 				var lightDistanceSq = math.distancesq(pointOnSurface, lightPosition);
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
-					lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
-					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
-				result += diffuseRgb + specularRgb;
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				finalRgb += diffuseRgb + specularRgb;
 			}
 
-			return result.Color;
+			return finalRgb.Color;
 		}
 
 		// TODO: Handle angle greater than 90, it's zero in that case.
