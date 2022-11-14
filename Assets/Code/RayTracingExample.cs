@@ -205,7 +205,7 @@ namespace RayTracer
 				// Check intersection against each sphere
 				foreach (var sphere in Spheres)
 				{
-					switch (RaySphereIntersectionAnalytical(ray, sphere, out var intersectA, out var intersectB))
+					switch (RMath.RaySphereIntersectionAnalytical(ray, sphere, out var intersectA, out var intersectB))
 					{
 						case 0:
 						{
@@ -225,107 +225,6 @@ namespace RayTracer
 					}
 				}
 			}
-		}
-
-		private static bool IsLengthEqual(float3 v, float length)
-		{
-			return math.abs(math.lengthsq(v) - length * length) < 0.001f;
-		}
-
-		// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-		private int RaySphereIntersectionGeometric(Ray ray, Sphere sphere, out float3 intersectA, out float3 intersectB)
-		{
-			var l = sphere.Center - ray.Origin;
-			var tca = math.dot(l, ray.Direction);
-			var d2 = math.dot(l, l) - tca * tca;
-			var radiusSquared = sphere.Radius * sphere.Radius;
-			if (d2 > radiusSquared)
-			{
-				intersectA = default;
-				intersectB = default;
-				return 0;
-			}
-
-			var thc = math.sqrt(radiusSquared - d2);
-			var t0 = tca - thc;
-			var t1 = tca + thc;
-
-			if (math.abs(t0 - t1) < 0.0001f)
-			{
-				intersectA = ray.GetPoint(t0);
-				intersectB = ray.GetPoint(t1);
-				return 1;
-			}
-
-			intersectA = ray.GetPoint(t0);
-			intersectB = ray.GetPoint(t1);
-			return 2;
-		}
-
-		// This algorithm currently doesn't work! It's on hold!
-		// Derived from:
-		// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-		public static int RaySphereIntersectionAnalytical(Ray ray, Sphere sphere, out float3 intersectA,
-			out float3 intersectB)
-		{
-			// Debug.Assert(IsLengthEqual(ray.Direction, 1f));
-			// Debug.Assert(Math.Abs(math.dot(ray.Direction, ray.Direction) - 1f) < 0.001f);
-
-			var oc = ray.Origin - sphere.Center;
-			var a = math.dot(ray.Direction, ray.Direction);
-			var b = 2 * math.dot(ray.Direction, oc);
-			var c = math.dot(oc, oc) - sphere.Radius * sphere.Radius;
-
-			switch (SolveQuadraticEquation(a, b, c, out var x0, out var x1))
-			{
-				case 0:
-				{
-					// Another way to calculate
-					var x = math.dot(ray.Direction, oc);
-					var det = x * x - (math.lengthsq(oc) - sphere.Radius * sphere.Radius);
-					Debug.Assert(det < 0);
-					Debug.Log("no root");
-
-					intersectA = default;
-					intersectB = default;
-					return 0;
-				}
-				case 1:
-				{
-					intersectA = intersectB = ray.GetPoint(x0);
-					return 1;
-				}
-				case 2:
-				{
-					intersectA = ray.GetPoint(x0);
-					intersectB = ray.GetPoint(x1);
-					return 2;
-				}
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
-		public static int SolveQuadraticEquation(float a, float b, float c, out float x0, out float x1)
-		{
-			var discriminant = b * b - 4 * a * c;
-
-			if (discriminant < 0)
-			{
-				x0 = 0;
-				x1 = 0;
-				return 0;
-			}
-
-			if (discriminant == 0)
-			{
-				x0 = x1 = 0.5f * -b / a;
-				return 1;
-			}
-
-			x0 = 0.5f * (-b + math.sqrt(discriminant)) / a;
-			x1 = 0.5f * (-b - math.sqrt(discriminant)) / a;
-			return 2;
 		}
 
 		private void DrawRays(CameraData cameraData)
