@@ -478,6 +478,8 @@ namespace RayTracer
 					return GetSphereNormal(surfacePoint, objectId.Index);
 				case ObjectType.Triangle:
 					return TriangleNormals[objectId.Index];
+				case ObjectType.MeshTriangle:
+					return Meshes[objectId.MeshIndex].TriangleNormals[objectId.Index];
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
@@ -492,6 +494,8 @@ namespace RayTracer
 					return SphereMaterials[id.Index].MirrorReflectance;
 				case ObjectType.Triangle:
 					return TriangleMaterials[id.Index].MirrorReflectance;
+				case ObjectType.MeshTriangle:
+					return Meshes[id.MeshIndex].MaterialData.MirrorReflectance;
 				case ObjectType.None:
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -505,25 +509,31 @@ namespace RayTracer
 			return surfaceNormal;
 		}
 
-		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectId objectId)
+		private (float3 surfaceNormal, MaterialData material) GetSurfaceNormalAndMaterial(float3 surfacePoint, ObjectId id)
 		{
-			switch (objectId.Type)
+			switch (id.Type)
 			{
 				case ObjectType.Sphere:
 				{
-					var surfaceNormal = GetSphereNormal(surfacePoint, objectId.Index);
-					var material = SphereMaterials[objectId.Index];
+					var surfaceNormal = GetSphereNormal(surfacePoint, id.Index);
+					var material = SphereMaterials[id.Index];
 					return (surfaceNormal, material);
 				}
 				case ObjectType.Triangle:
 				{
-					var surfaceNormal = TriangleNormals[objectId.Index];
-					var material = TriangleMaterials[objectId.Index];
+					var surfaceNormal = TriangleNormals[id.Index];
+					var material = TriangleMaterials[id.Index];
+					return (surfaceNormal, material);
+				}
+				case ObjectType.MeshTriangle:
+				{
+					var surfaceNormal = Meshes[id.MeshIndex].TriangleNormals[id.Index];
+					var material = Meshes[id.MeshIndex].MaterialData;
 					return (surfaceNormal, material);
 				}
 				case ObjectType.None:
 				default:
-					throw new ArgumentOutOfRangeException(nameof(objectId), objectId, null);
+					throw new ArgumentOutOfRangeException(nameof(id), id, null);
 			}
 		}
 
