@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using static Unity.Mathematics.math;
+using static RayTracer.RMath;
 
 namespace RayTracer
 {
@@ -71,7 +73,7 @@ namespace RayTracer
 
 			foreach (var sphere in Scene.SphereData.Spheres)
 			{
-				Gizmos.DrawWireSphere(sphere.Center, math.sqrt(sphere.RadiusSquared));
+				Gizmos.DrawWireSphere(sphere.Center, sqrt(sphere.RadiusSquared));
 			}
 
 			if (ToggleDrawPixelColors)
@@ -166,9 +168,9 @@ namespace RayTracer
 			CameraData = new CameraData
 			{
 				Position = cam.transform.position,
-				Forward = math.normalize(cam.transform.forward),
-				Right = math.normalize(cam.transform.right),
-				Up = math.normalize(cam.transform.up)
+				Forward = normalize(cam.transform.forward),
+				Right = normalize(cam.transform.right),
+				Up = normalize(cam.transform.up)
 			};
 
 			ClearScreen();
@@ -285,7 +287,7 @@ namespace RayTracer
 				var ray = new Ray
 				{
 					Origin = cameraPosition,
-					Direction = math.normalize(pixelPosition - cameraPosition)
+					Direction = normalize(pixelPosition - cameraPosition)
 				};
 				var index = GetPixelIndex(new int2(x, y), resX);
 				PixelColors[index] = Shade(ray, cameraPosition, 0).Color;
@@ -297,7 +299,7 @@ namespace RayTracer
 		// TODO: Optimize crash (infinite loop) here.
 		private Rgb Shade(Ray pixelRay, float3 cameraPosition, int currentRayBounce)
 		{
-			Debug.Assert(RMath.IsNormalized(pixelRay.Direction));
+			Debug.Assert(IsNormalized(pixelRay.Direction));
 
 			var hitResult = Scene.IntersectRay(pixelRay);
 			var pixelRayHitObject = hitResult.ObjectId;
@@ -315,16 +317,16 @@ namespace RayTracer
 			var surfacePoint = pixelRay.GetPoint(hitResult.Distance);
 			var (surfaceNormal, material) = GetSurfaceNormalAndMaterial(surfacePoint, pixelRayHitObject);
 			var color = CalculateAmbient(material.AmbientReflectance, Scene.AmbientLight.Radiance);
-			var cameraDirection = math.normalize(cameraPosition - surfacePoint);
+			var cameraDirection = normalize(cameraPosition - surfacePoint);
 
 			foreach (var pointLight in Scene.PointLights)
 			{
 				var lightPosition = pointLight.Position;
-				var lightDirection = math.normalize(lightPosition - surfacePoint);
+				var lightDirection = normalize(lightPosition - surfacePoint);
 				var shadowRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
 				var shadowRay = new Ray(shadowRayOrigin, lightDirection);
 				var shadowRayHitResult = Scene.IntersectRay(shadowRay);
-				var lightDistanceSq = math.distancesq(surfacePoint, lightPosition);
+				var lightDistanceSq = distancesq(surfacePoint, lightPosition);
 
 				// TODO-Optimize: We can remove this branch, if ray-scene intersection returns infinite distance by default
 				if (shadowRayHitResult.ObjectId.Type != ObjectType.None)
@@ -341,10 +343,8 @@ namespace RayTracer
 				Debug.Assert(shadowRayHitResult.ObjectId != pixelRayHitObject);
 
 				var receivedIrradiance = pointLight.Intensity / lightDistanceSq;
-				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal,
-					lightDirection);
-				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal,
-					material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
+				var diffuseRgb = CalculateDiffuse(receivedIrradiance, material.DiffuseReflectance, surfaceNormal, lightDirection);
+				var specularRgb = CalculateSpecular(lightDirection, cameraDirection, surfaceNormal, material.SpecularReflectance, receivedIrradiance, material.PhongExponent);
 				color += diffuseRgb + specularRgb;
 			}
 
@@ -361,20 +361,20 @@ namespace RayTracer
 		private Ray Reflect(float3 surfacePoint, float3 surfaceNormal, float3 cameraDirection)
 		{
 			var newRayOrigin = surfacePoint + surfaceNormal * ShadowRayEpsilon;
-			var newRayNormal = 2 * surfaceNormal * math.dot(cameraDirection, surfaceNormal) - cameraDirection;
+			var newRayNormal = 2 * surfaceNormal * dot(cameraDirection, surfaceNormal) - cameraDirection;
 			return new Ray(newRayOrigin, newRayNormal);
 		}
 
 		private Rgb CalculateSpecular(float3 lightDirection, float3 cameraDirection, float3 surfaceNormal,
 			float3 specularReflectance, float receivedIrradiance, float phongExponent)
 		{
-			Debug.Assert(RMath.IsNormalized(lightDirection));
-			Debug.Assert(RMath.IsNormalized(cameraDirection));
-			Debug.Assert(RMath.IsNormalized(surfaceNormal));
+			Debug.Assert(IsNormalized(lightDirection));
+			Debug.Assert(IsNormalized(cameraDirection));
+			Debug.Assert(IsNormalized(surfaceNormal));
 
-			var lightDotNormal = math.dot(lightDirection, surfaceNormal);
+			var lightDotNormal = dot(lightDirection, surfaceNormal);
 			// Angle works like this since both vectors are normalized
-			var angle = math.degrees(math.acos(lightDotNormal));
+			var angle = degrees(acos(lightDotNormal));
 			// If this assertion fails, take the absolute of angle
 			Debug.Assert(angle > 0f);
 
@@ -385,17 +385,17 @@ namespace RayTracer
 			}
 
 			var v = lightDirection + cameraDirection;
-			var halfwayVector = v / math.length(v);
-			Debug.Assert(RMath.IsNormalized(halfwayVector));
+			var halfwayVector = v / length(v);
+			Debug.Assert(IsNormalized(halfwayVector));
 
-			var cosNormalAndHalfway = math.max(0, math.dot(surfaceNormal, halfwayVector));
-			return new Rgb(specularReflectance * math.pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
+			var cosNormalAndHalfway = max(0, dot(surfaceNormal, halfwayVector));
+			return new Rgb(specularReflectance * pow(cosNormalAndHalfway, phongExponent) * receivedIrradiance);
 		}
 
 		private float3 GetSphereNormal(float3 surfacePoint, int index)
 		{
 			var sphere = Scene.SphereData.Spheres[index];
-			var surfaceNormal = math.normalize(surfacePoint - sphere.Center);
+			var surfaceNormal = normalize(surfacePoint - sphere.Center);
 			return surfaceNormal;
 		}
 
@@ -437,10 +437,10 @@ namespace RayTracer
 			float3 lightDirection)
 		{
 			Debug.Assert(receivedIrradiance >= 0f);
-			Debug.Assert(RMath.IsNormalized(surfaceNormal));
-			Debug.Assert(RMath.IsNormalized(lightDirection));
+			Debug.Assert(IsNormalized(surfaceNormal));
+			Debug.Assert(IsNormalized(lightDirection));
 
-			var cosNormalAndLightDir = math.max(0, math.dot(lightDirection, surfaceNormal));
+			var cosNormalAndLightDir = max(0, dot(lightDirection, surfaceNormal));
 
 			return new Rgb
 			{
