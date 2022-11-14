@@ -307,6 +307,11 @@ namespace RayTracer
 
 		private Rgb CalculateDiffuse(float lightIntensity, float distanceToLightSquared, float3 diffuseReflectance, float3 surfaceNormal, float3 directionToLight)
 		{
+			Debug.Assert(lightIntensity > 0f);
+			Debug.Assert(distanceToLightSquared > 0f);
+			Debug.Assert(RMath.IsNormalized(surfaceNormal));
+			Debug.Assert(RMath.IsNormalized(directionToLight));
+			
 			var cosTheta = math.max(0, math.dot(directionToLight, surfaceNormal));
 			
 			return new Rgb
