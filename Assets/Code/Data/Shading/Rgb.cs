@@ -12,6 +12,11 @@ namespace RayTracer
 		// The Rgb value we get is in (0, 255) range, Unity Color value is (0, 1) range
 		public Color Color => new(Value.x / 255f, Value.y / 255f, Value.z / 255f, 1f);
 
+		public Rgb(Color value)
+		{
+			this = new Rgb(new float3(value.r, value.g, value.b) * 255f);
+		}
+		
 		public Rgb(float3 value)
 		{
 			Value = value;
