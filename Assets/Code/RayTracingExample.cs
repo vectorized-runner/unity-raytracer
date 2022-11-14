@@ -2,6 +2,11 @@ using System;
 using Unity.Mathematics;
 using UnityEngine;
 
+public enum DrawingMode
+{
+	
+}
+
 [Serializable]
 public struct Ray
 {
@@ -74,6 +79,9 @@ public class RayTracingExample : MonoBehaviour
 
 	private CameraData CameraData;
 
+	public bool ToggleDrawBounds = true;
+	public bool ToggleDrawHorizontalLines = true;
+	public bool ToggleDrawVerticalLines = true;
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
@@ -109,7 +117,11 @@ public class RayTracingExample : MonoBehaviour
 	// TODO: All these positions needs to rotate with camera
 	void DrawImagePlane(CameraData cameraData)
 	{
-		DrawBounds(cameraData);
+		if (ToggleDrawBounds)
+		{
+			DrawBounds(cameraData);
+		}
+
 		DrawLines(cameraData);
 	}
 
@@ -118,24 +130,30 @@ public class RayTracingExample : MonoBehaviour
 		var start = ImagePlane.GetRect(cameraData).TopLeft;
 		var resolutionX = ImagePlane.Resolution.X;
 
-		// Horizontal Lines
-		for (var x = 0; x <= resolutionX; x++)
+		if (ToggleDrawHorizontalLines)
 		{
-			var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
-			var lineStart = start + new float3(0, -moveDownLength, 0);
-			var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
-			Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+			// Horizontal Lines
+			for (var x = 0; x <= resolutionX; x++)
+			{
+				var moveDownLength = ImagePlane.VerticalLength * x / resolutionX;
+				var lineStart = start + new float3(0, -moveDownLength, 0);
+				var lineEnd = lineStart + new float3(ImagePlane.HorizontalLength, 0, 0);
+				Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+			}
 		}
 
-		var resolutionY = ImagePlane.Resolution.Y;
-
-		// Vertical Lines
-		for (var y = 0; y <= resolutionY; y++)
+		if (ToggleDrawVerticalLines)
 		{
-			var moveRightLength = ImagePlane.HorizontalLength * y / resolutionX;
-			var lineStart = start + new float3(moveRightLength, 0, 0);
-			var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
-			Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+			var resolutionY = ImagePlane.Resolution.Y;
+
+			// Vertical Lines
+			for (var y = 0; y <= resolutionY; y++)
+			{
+				var moveRightLength = ImagePlane.HorizontalLength * y / resolutionY;
+				var lineStart = start + new float3(moveRightLength, 0, 0);
+				var lineEnd = lineStart + new float3(0, -ImagePlane.VerticalLength, 0);
+				Debug.DrawLine(lineStart, lineEnd, Color.yellow);
+			}
 		}
 	}
 
