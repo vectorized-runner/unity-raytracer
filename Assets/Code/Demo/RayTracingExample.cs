@@ -39,6 +39,9 @@ namespace RayTracer
 		public List<Triangle> Triangles;
 		public List<MaterialData> TriangleMaterials;
 		public List<float3> TriangleNormals;
+		
+		// Meshes
+		public List<Mesh> Meshes;
 
 		private CameraData CameraData;
 		private Color[] PixelColors = Array.Empty<Color>();
@@ -107,6 +110,7 @@ namespace RayTracer
 		{
 			FetchTriangles();
 			FetchSpheres();
+			FetchMeshes();
 			FetchPointLights();
 			FetchAmbientLights();
 		}
@@ -212,6 +216,16 @@ namespace RayTracer
 		private int GetPixelIndex(int2 pixelPosition, int resolutionX)
 		{
 			return pixelPosition.x + pixelPosition.y * resolutionX;
+		}
+
+		private void FetchMeshes()
+		{
+			Meshes.Clear();
+
+			foreach (var mesh in FindObjectsOfType<SceneMesh>())
+			{
+				Meshes.Add(mesh.Mesh);
+			}
 		}
 
 		private void FetchSpheres()
