@@ -14,12 +14,12 @@ namespace RayTracer
 		{
 			get
 			{
-				// TODO: This normal works as -v / mathlength(v) in cpp side, understand this?
+				// This might be -v / length(v)
 				var v = math.cross(Vertex2 - Vertex0, Vertex1 - Vertex0);
 				return v / math.length(v);
 			}
 		}
 
-		public float3 Center => (Vertex0 + Vertex1 + Vertex2) / 3;
+		public float3 Center => (Vertex0 + Vertex1 + Vertex2) * 0.3333f;
 	}
 }
